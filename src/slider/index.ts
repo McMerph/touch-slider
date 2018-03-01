@@ -2,8 +2,8 @@ import CLASS_NAMES from "./ClassNames";
 import "./index.css";
 
 interface ISettings {
-    maxDelta: number;
     deltaThreshold: number;
+    maxDelta: number;
     timeThresholdInMs: number;
 }
 
@@ -15,7 +15,7 @@ export default class Slider {
         timeThresholdInMs: 300,
     };
 
-    private readonly element: HTMLElement;
+    private readonly element: Element;
     private readonly settings: ISettings;
 
     private startTouch: Touch;
@@ -31,26 +31,13 @@ export default class Slider {
 
     public constructor(element: HTMLElement, settings?: Partial<ISettings>) {
         this.element = element;
-        this.element.classList.add(CLASS_NAMES.BLOCK);
         this.settings = {...Slider.defaultSettings, ...settings};
         this.bind();
-        const children: HTMLCollection = this.element.children;
-        if (children.length > 0) {
-            this.centerSlide = (this.element.firstElementChild as HTMLElement);
-            this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
-            for (let i = 0; i < this.element.children.length; i++) {
-                this.element.children[i].classList.add(
-                    CLASS_NAMES.ELEMENTS.SLIDE.NAME,
-                    CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
-                );
-            }
-            this.initializeNavigation();
 
-            this.element.addEventListener("touchstart", this.handleTouchStart);
-            this.element.addEventListener("touchmove", this.handleTouchMove);
-            this.element.addEventListener("touchend", this.handleTouchEnd);
-            this.element.addEventListener("touchcancel", this.handleTouchEnd);
-            this.element.addEventListener("transitionend", this.handleTransitionEnd);
+        this.initializeEventListeners();
+        if (this.element.children.length > 0) {
+            this.initializeClassNames();
+            this.initializeNavigation();
         }
     }
 
@@ -70,13 +57,35 @@ export default class Slider {
         this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
     }
 
+    private initializeClassNames() {
+        this.element.classList.add(CLASS_NAMES.BLOCK);
+        for (let i = 0; i < this.element.children.length; i++) {
+            this.element.children[i].classList.add(
+                CLASS_NAMES.ELEMENTS.SLIDE.NAME,
+                CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
+            );
+        }
+        this.centerSlide = (this.element.firstElementChild as HTMLElement);
+        this.centerSlide.classList.add(
+            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT,
+        );
+    }
+
     private initializeNavigation(): void {
         for (let i = 0; i < this.element.children.length; i++) {
             this.removeSlideFromNavigation((this.element.children[i]) as HTMLElement);
         }
-        this.initializeLeftSlide();
         this.initializeCenterSlide();
+        this.initializeLeftSlide();
         this.initializeRightSlide();
+    }
+
+    private initializeEventListeners() {
+        this.element.addEventListener("touchstart", this.handleTouchStart);
+        this.element.addEventListener("touchmove", this.handleTouchMove);
+        this.element.addEventListener("touchend", this.handleTouchEnd);
+        this.element.addEventListener("touchcancel", this.handleTouchEnd);
+        this.element.addEventListener("transitionend", this.handleTransitionEnd);
     }
 
     private removeSlideFromNavigation(slide: HTMLElement): void {
@@ -85,7 +94,7 @@ export default class Slider {
             CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT,
             CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.RIGHT,
         );
-        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,);
+        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
         slide.style.transform = null;
     }
 
@@ -120,6 +129,18 @@ export default class Slider {
         this.swipeStarted = false;
     }
 
+    private getDelta(touch: Touch): number {
+        let delta: number = touch.pageX - this.startTouch.pageX;
+        if ((delta > 0 && !this.leftSlide) || (delta < 0 && !this.rightSlide)) {
+            delta = delta / 5;
+        }
+        delta = delta / this.element.clientWidth * 100;
+        delta = delta > this.settings.maxDelta ? this.settings.maxDelta : delta;
+        delta = delta < -this.settings.maxDelta ? -this.settings.maxDelta : delta;
+
+        return delta;
+    }
+
     private handleTransitionEnd(): void {
         this.getSlides().forEach((slide) => slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
         if (this.slideToLeftAnimation) {
@@ -131,18 +152,6 @@ export default class Slider {
             this.slideToRightAnimation = false;
         }
         this.initializeNavigation();
-    }
-
-    private getDelta(touch: Touch): number {
-        let delta: number = touch.pageX - this.startTouch.pageX;
-        if ((delta > 0 && !this.leftSlide) || (delta < 0 && !this.rightSlide)) {
-            delta = delta / 5;
-        }
-        delta = delta / this.element.clientWidth * 100;
-        delta = delta > this.settings.maxDelta ? this.settings.maxDelta : delta;
-        delta = delta < -this.settings.maxDelta ? -this.settings.maxDelta : delta;
-
-        return delta;
     }
 
     private getSlides(): HTMLElement[] {
@@ -158,6 +167,12 @@ export default class Slider {
         return slides;
     }
 
+    private initializeCenterSlide(): void {
+        this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
+        this.centerSlide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
+        this.centerSlide.style.transform = null;
+    }
+
     private initializeLeftSlide(): void {
         const left = this.centerSlide.previousElementSibling;
         if (left) {
@@ -168,12 +183,6 @@ export default class Slider {
         } else {
             this.leftSlide = undefined;
         }
-    }
-
-    private initializeCenterSlide(): void {
-        this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
-        this.centerSlide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
-        this.centerSlide.style.transform = null;
     }
 
     private initializeRightSlide(): void {
