@@ -1,13 +1,22 @@
 import CLASS_NAMES from "./ClassNames";
 import "./index.css";
 
+interface ISettings {
+    maxDelta: number;
+    deltaThreshold: number;
+    timeThresholdInMs: number;
+}
+
 export default class Slider {
 
-    private static readonly MAX_DELTA = 95;
-    private static readonly DELTA_THRESHOLD = 50;
-    private static readonly TIME_THRESHOLD_IN_MS = 300;
+    private static defaultSettings: ISettings = {
+        deltaThreshold: 50,
+        maxDelta: 95,
+        timeThresholdInMs: 300,
+    };
 
     private readonly element: HTMLElement;
+    private readonly settings: ISettings;
 
     private startTouch: Touch;
     private swipeStarted: boolean = false;
@@ -20,14 +29,11 @@ export default class Slider {
     private slideToRightAnimation: boolean = false;
     private startTime: number;
 
-    public constructor(element: HTMLElement) {
+    public constructor(element: HTMLElement, settings?: Partial<ISettings>) {
         this.element = element;
         this.element.classList.add(CLASS_NAMES.BLOCK);
-        this.isHorizontalSwipe = this.isHorizontalSwipe.bind(this);
-        this.handleTouchStart = this.handleTouchStart.bind(this);
-        this.handleTouchMove = this.handleTouchMove.bind(this);
-        this.handleTouchEnd = this.handleTouchEnd.bind(this);
-        this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
+        this.settings = {...Slider.defaultSettings, ...settings};
+        this.bind();
         const children: HTMLCollection = this.element.children;
         if (children.length > 0) {
             this.centerSlide = (this.element.firstElementChild as HTMLElement);
@@ -54,6 +60,14 @@ export default class Slider {
 
     public manualSlideToRight(): void {
         this.slideTo(-100);
+    }
+
+    private bind() {
+        this.isHorizontalSwipe = this.isHorizontalSwipe.bind(this);
+        this.handleTouchStart = this.handleTouchStart.bind(this);
+        this.handleTouchMove = this.handleTouchMove.bind(this);
+        this.handleTouchEnd = this.handleTouchEnd.bind(this);
+        this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
     }
 
     private initializeNavigation(): void {
@@ -125,8 +139,8 @@ export default class Slider {
             delta = delta / 5;
         }
         delta = delta / this.element.clientWidth * 100;
-        delta = delta > Slider.MAX_DELTA ? Slider.MAX_DELTA : delta;
-        delta = delta < -Slider.MAX_DELTA ? -Slider.MAX_DELTA : delta;
+        delta = delta > this.settings.maxDelta ? this.settings.maxDelta : delta;
+        delta = delta < -this.settings.maxDelta ? -this.settings.maxDelta : delta;
 
         return delta;
     }
@@ -176,8 +190,8 @@ export default class Slider {
 
     private slideTo(delta: number): void {
         this.getSlides().forEach((slide) => slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
-        const shouldSlide: boolean = Math.abs(delta) > Slider.DELTA_THRESHOLD ||
-            performance.now() - this.startTime < Slider.TIME_THRESHOLD_IN_MS;
+        const shouldSlide: boolean = Math.abs(delta) > this.settings.deltaThreshold ||
+            performance.now() - this.startTime < this.settings.timeThresholdInMs;
         if (shouldSlide && delta < 0 && this.rightSlide) {
             this.slideToRight();
         } else if (shouldSlide && delta > 0 && this.leftSlide) {
