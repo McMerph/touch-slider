@@ -10,3 +10,21 @@
   width: 1px;
   white-space: nowrap;
 }
+
+.touch-test {
+  height: 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.red {
+  background-color: red;
+}
+
+.green {
+  background-color: green;
+}
+
+.blue {
+  background-color: blue;
+}

@@ -1,21 +1,3 @@
-.red {
-  background-color: red;
-}
-
-.green {
-  background-color: green;
-}
-
-.blue {
-  background-color: blue;
-}
-
-.touch-test {
-  height: 100px;
-  position: relative;
-  overflow: hidden;
-}
-
 .slide {
   overflow: hidden;
   position: absolute;
