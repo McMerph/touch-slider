@@ -1,3 +1,8 @@
+.slider {
+  position: relative;
+  overflow: hidden;
+}
+
 .slide {
   overflow: hidden;
   position: absolute;
@@ -7,18 +12,18 @@
   height: 100%;
 }
 
-.slide-animating {
+.slide_animating {
   transition: transform 200ms linear;
 }
 
-.slide-left {
+.slide_left {
   transform: translate3d(-100%, 0, 0);
 }
 
-.slide-current {
+.slide_current {
   transform: translate3d(0, 0, 0);
 }
 
-.slide-right {
+.slide_right {
   transform: translate3d(100%, 0, 0);
 }

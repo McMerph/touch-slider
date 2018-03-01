@@ -7,11 +7,12 @@ export default class Slider {
     private static readonly TIME_THRESHOLD_IN_MS = 300;
 
     private static readonly HIDDEN_CLASS: string = "visually-hidden";
+    private static readonly SLIDER_CLASS: string = "slider";
     private static readonly SLIDE_CLASS: string = "slide";
-    private static readonly LEFT_SLIDE_CLASS = "slide-left";
-    private static readonly CURRENT_SLIDE_CLASS = "slide-current";
-    private static readonly RIGHT_SLIDE_CLASS = "slide-right";
-    private static readonly ANIMATING_CLASS: string = "slide-animating";
+    private static readonly LEFT_SLIDE_CLASS = "slide_left";
+    private static readonly CURRENT_SLIDE_CLASS = "slide_current";
+    private static readonly RIGHT_SLIDE_CLASS = "slide_right";
+    private static readonly ANIMATING_CLASS: string = "slide_animating";
 
     private readonly element: HTMLElement;
 
@@ -28,6 +29,7 @@ export default class Slider {
 
     public constructor(element: HTMLElement) {
         this.element = element;
+        this.element.classList.add(Slider.SLIDER_CLASS);
         this.isHorizontalSwipe = this.isHorizontalSwipe.bind(this);
         this.handleTouchStart = this.handleTouchStart.bind(this);
         this.handleTouchMove = this.handleTouchMove.bind(this);
@@ -108,7 +110,7 @@ export default class Slider {
         this.swipeStarted = false;
     }
 
-    private handleTransitionEnd(event: Event): void {
+    private handleTransitionEnd(): void {
         this.getSlides().forEach((slide) => slide.classList.remove(Slider.ANIMATING_CLASS));
         if (this.slideToLeftAnimation) {
             this.centerSlide = (this.leftSlide as HTMLElement);
@@ -230,7 +232,8 @@ export default class Slider {
      * @param {Touch} touch - touch to check
      */
     private isHorizontalSwipe(touch: Touch): boolean {
-        return Math.abs(this.startTouch.pageX - touch.pageX) >= Math.abs(this.startTouch.pageY - touch.pageY);
+        return Math.abs(this.startTouch.pageX - touch.pageX) >=
+            Math.abs(this.startTouch.pageY - touch.pageY);
     }
 
 }
