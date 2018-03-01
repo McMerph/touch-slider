@@ -1,3 +1,4 @@
+import CLASS_NAMES from "./ClassNames";
 import "./index.css";
 
 export default class Slider {
@@ -5,14 +6,6 @@ export default class Slider {
     private static readonly MAX_DELTA = 95;
     private static readonly DELTA_THRESHOLD = 50;
     private static readonly TIME_THRESHOLD_IN_MS = 300;
-
-    private static readonly HIDDEN_CLASS: string = "visually-hidden";
-    private static readonly SLIDER_CLASS: string = "slider";
-    private static readonly SLIDE_CLASS: string = "slide";
-    private static readonly LEFT_SLIDE_CLASS = "slide_left";
-    private static readonly CURRENT_SLIDE_CLASS = "slide_current";
-    private static readonly RIGHT_SLIDE_CLASS = "slide_right";
-    private static readonly ANIMATING_CLASS: string = "slide_animating";
 
     private readonly element: HTMLElement;
 
@@ -29,7 +22,7 @@ export default class Slider {
 
     public constructor(element: HTMLElement) {
         this.element = element;
-        this.element.classList.add(Slider.SLIDER_CLASS);
+        this.element.classList.add(CLASS_NAMES.BLOCK);
         this.isHorizontalSwipe = this.isHorizontalSwipe.bind(this);
         this.handleTouchStart = this.handleTouchStart.bind(this);
         this.handleTouchMove = this.handleTouchMove.bind(this);
@@ -38,9 +31,12 @@ export default class Slider {
         const children: HTMLCollection = this.element.children;
         if (children.length > 0) {
             this.centerSlide = (this.element.firstElementChild as HTMLElement);
-            this.centerSlide.classList.add(Slider.CURRENT_SLIDE_CLASS);
+            this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
             for (let i = 0; i < this.element.children.length; i++) {
-                this.element.children[i].classList.add(Slider.SLIDE_CLASS, Slider.HIDDEN_CLASS);
+                this.element.children[i].classList.add(
+                    CLASS_NAMES.ELEMENTS.SLIDE.NAME,
+                    CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
+                );
             }
             this.initializeNavigation();
 
@@ -71,11 +67,11 @@ export default class Slider {
 
     private removeSlideFromNavigation(slide: HTMLElement): void {
         slide.classList.remove(
-            Slider.LEFT_SLIDE_CLASS,
-            Slider.CURRENT_SLIDE_CLASS,
-            Slider.RIGHT_SLIDE_CLASS,
+            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.LEFT,
+            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT,
+            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.RIGHT,
         );
-        slide.classList.add(Slider.HIDDEN_CLASS);
+        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,);
         slide.style.transform = null;
     }
 
@@ -111,7 +107,7 @@ export default class Slider {
     }
 
     private handleTransitionEnd(): void {
-        this.getSlides().forEach((slide) => slide.classList.remove(Slider.ANIMATING_CLASS));
+        this.getSlides().forEach((slide) => slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
         if (this.slideToLeftAnimation) {
             this.centerSlide = (this.leftSlide as HTMLElement);
             this.slideToLeftAnimation = false;
@@ -152,8 +148,8 @@ export default class Slider {
         const left = this.centerSlide.previousElementSibling;
         if (left) {
             this.leftSlide = left as HTMLElement;
-            this.leftSlide.classList.add(Slider.LEFT_SLIDE_CLASS);
-            this.leftSlide.classList.remove(Slider.HIDDEN_CLASS);
+            this.leftSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.LEFT);
+            this.leftSlide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
             this.leftSlide.style.transform = null;
         } else {
             this.leftSlide = undefined;
@@ -161,8 +157,8 @@ export default class Slider {
     }
 
     private initializeCenterSlide(): void {
-        this.centerSlide.classList.add(Slider.CURRENT_SLIDE_CLASS);
-        this.centerSlide.classList.remove(Slider.HIDDEN_CLASS);
+        this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
+        this.centerSlide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
         this.centerSlide.style.transform = null;
     }
 
@@ -170,8 +166,8 @@ export default class Slider {
         const right = this.centerSlide.nextElementSibling;
         if (right) {
             this.rightSlide = right as HTMLElement;
-            this.rightSlide.classList.add(Slider.RIGHT_SLIDE_CLASS);
-            this.rightSlide.classList.remove(Slider.HIDDEN_CLASS);
+            this.rightSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.RIGHT);
+            this.rightSlide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
             this.rightSlide.style.transform = null;
         } else {
             this.rightSlide = undefined;
@@ -179,7 +175,7 @@ export default class Slider {
     }
 
     private slideTo(delta: number): void {
-        this.getSlides().forEach((slide) => slide.classList.add(Slider.ANIMATING_CLASS));
+        this.getSlides().forEach((slide) => slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
         const shouldSlide: boolean = Math.abs(delta) > Slider.DELTA_THRESHOLD ||
             performance.now() - this.startTime < Slider.TIME_THRESHOLD_IN_MS;
         if (shouldSlide && delta < 0 && this.rightSlide) {
