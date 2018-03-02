@@ -49,7 +49,7 @@ export default class Slider {
         }
     }
 
-    public updateClassNames() {
+    public updateClassNames(): void {
         for (let i = 0; i < this.element.children.length; i++) {
             const child: Element = this.element.children.item(i);
             child.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.NAME);
@@ -67,7 +67,7 @@ export default class Slider {
         this.slideTo(-100);
     }
 
-    private bind() {
+    private bind(): void {
         this.isHorizontalSwipe = this.isHorizontalSwipe.bind(this);
         this.handleTouchStart = this.handleTouchStart.bind(this);
         this.handleTouchMove = this.handleTouchMove.bind(this);
@@ -75,7 +75,7 @@ export default class Slider {
         this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
     }
 
-    private addEventListeners() {
+    private addEventListeners(): void {
         this.element.addEventListener("touchstart", this.handleTouchStart);
         this.element.addEventListener("touchmove", this.handleTouchMove);
         this.element.addEventListener("touchend", this.handleTouchEnd);
