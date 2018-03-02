@@ -20,16 +20,13 @@ export default class Slider {
     private readonly element: Element;
     private readonly settings: ISettings;
 
+    private leftSlide: HTMLElement | undefined;
+    private centerSlide: HTMLElement | undefined;
+    private rightSlide: HTMLElement | undefined;
     private startTouch: Touch;
+
     private swipeStarted: boolean = false;
     private swipeDetecting: boolean = false;
-
-    private leftSlide: HTMLElement | undefined;
-
-    // TODO | undefined
-    private centerSlide: HTMLElement;
-
-    private rightSlide: HTMLElement | undefined;
     private slideToLeftAnimation: boolean = false;
     private slideToRightAnimation: boolean = false;
     private startTime: number;
@@ -41,12 +38,23 @@ export default class Slider {
 
         this.addEventListeners();
         this.element.classList.add(CLASS_NAMES.BLOCK);
-        this.centerSlide = (this.element.firstElementChild as HTMLElement);
-        this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
+        this.centerSlide = this.element.firstElementChild ?
+            (this.element.firstElementChild as HTMLElement) : undefined;
+        if (this.centerSlide) {
+            this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
+        }
         this.updateClassNames();
-        if (this.element.children.length > 0) {
+        if (this.centerSlide) {
             this.resetNavigationInAccordanceWithCurrentSlide();
         }
+    }
+
+    public appendSlide(slide: HTMLElement): void {
+        slide.classList.add(
+            CLASS_NAMES.ELEMENTS.SLIDE.NAME,
+            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
+        );
+        this.element.appendChild(slide);
     }
 
     public updateClassNames(): void {
@@ -88,10 +96,12 @@ export default class Slider {
             for (let i = 0; i < this.element.children.length; i++) {
                 this.removeSlideFromNavigation((this.element.children.item(i)) as HTMLElement);
             }
-            this.leftSlide = this.centerSlide.previousElementSibling ?
-                (this.centerSlide.previousElementSibling as HTMLElement) : undefined;
-            this.rightSlide = this.centerSlide.nextElementSibling ?
-                (this.centerSlide.nextElementSibling as HTMLElement) : undefined;
+            if (this.centerSlide) {
+                this.leftSlide = this.centerSlide.previousElementSibling ?
+                    (this.centerSlide.previousElementSibling as HTMLElement) : undefined;
+                this.rightSlide = this.centerSlide.nextElementSibling ?
+                    (this.centerSlide.nextElementSibling as HTMLElement) : undefined;
+            }
             this.initializeSlide(this.centerSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
             this.initializeSlide(this.leftSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.LEFT);
             this.initializeSlide(this.rightSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.RIGHT);
@@ -208,7 +218,9 @@ export default class Slider {
         if (this.leftSlide) {
             this.leftSlide.style.transform = `translate3d(${delta - 100}%, 0, 0`;
         }
-        this.centerSlide.style.transform = `translate3d(${delta}%, 0, 0`;
+        if (this.centerSlide) {
+            this.centerSlide.style.transform = `translate3d(${delta}%, 0, 0`;
+        }
         if (this.rightSlide) {
             this.rightSlide.style.transform = `translate3d(${delta + 100}%, 0, 0`;
         }
