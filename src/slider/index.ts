@@ -34,7 +34,6 @@ export default class Slider {
     public constructor(element: HTMLElement, settings?: Partial<ISettings>) {
         this.element = element;
         this.settings = {...Slider.defaultSettings, ...settings};
-        this.bind();
 
         this.addEventListeners();
         this.element.classList.add(CLASS_NAMES.BLOCK);
@@ -60,28 +59,82 @@ export default class Slider {
         }
     }
 
-    public slideToLeft(): void {
+    public previous(): void {
         this.slideTo(100);
     }
 
-    public slideToRight(): void {
+    public next(): void {
         this.slideTo(-100);
     }
 
-    private bind(): void {
-        this.isHorizontalSwipe = this.isHorizontalSwipe.bind(this);
-        this.handleTouchStart = this.handleTouchStart.bind(this);
-        this.handleTouchMove = this.handleTouchMove.bind(this);
-        this.handleTouchEnd = this.handleTouchEnd.bind(this);
-        this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
+    private addEventListeners(): void {
+        this.element.addEventListener("touchstart", (event) => {
+            if (event.touches.length === 1 && !this.swipeStarted) {
+                this.swipeDetecting = true;
+                this.startTouch = event.changedTouches[0];
+            }
+            this.startTime = performance.now();
+        });
+
+        this.element.addEventListener("touchmove", (event) => {
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                if (this.swipeDetecting) {
+                    if (this.isHorizontalSwipe(event.changedTouches[0])) {
+                        this.swipeStarted = true;
+                    }
+                    this.swipeDetecting = false;
+                }
+                if (this.swipeStarted) {
+                    this.setTranslate(this.getDelta(event.changedTouches[0]));
+                }
+            }
+        });
+
+        const handleTouchEnd: (event: TouchEvent) => void = (event) => {
+            if (this.swipeStarted) {
+                event.preventDefault();
+                this.slideTo(this.getDelta(event.changedTouches[0]));
+            }
+            this.swipeStarted = false;
+        };
+        this.element.addEventListener("touchend", handleTouchEnd);
+        this.element.addEventListener("touchcancel", handleTouchEnd);
+
+        this.element.addEventListener("transitionend", () => {
+            this.getSlides().forEach((slide) =>
+                slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
+            if (this.slideToLeftAnimation) {
+                this.centerSlide = this.leftSlide;
+                this.slideToLeftAnimation = false;
+            }
+            if (this.slideToRightAnimation) {
+                this.centerSlide = this.rightSlide;
+                this.slideToRightAnimation = false;
+            }
+            this.resetNavigationInAccordanceWithCurrentSlide();
+        });
     }
 
-    private addEventListeners(): void {
-        this.element.addEventListener("touchstart", this.handleTouchStart);
-        this.element.addEventListener("touchmove", this.handleTouchMove);
-        this.element.addEventListener("touchend", this.handleTouchEnd);
-        this.element.addEventListener("touchcancel", this.handleTouchEnd);
-        this.element.addEventListener("transitionend", this.handleTransitionEnd);
+    /**
+     * If horizontal offset greater than vertical then it is swipe
+     * @param {Touch} touch - touch to check
+     */
+    private isHorizontalSwipe(touch: Touch): boolean {
+        return Math.abs(this.startTouch.pageX - touch.pageX) >=
+            Math.abs(this.startTouch.pageY - touch.pageY);
+    }
+
+    private getDelta(touch: Touch): number {
+        let delta: number = touch.pageX - this.startTouch.pageX;
+        if ((delta > 0 && !this.leftSlide) || (delta < 0 && !this.rightSlide)) {
+            delta = delta / this.settings.boundaryResistanceReduction;
+        }
+        delta = delta / this.element.clientWidth * 100;
+        delta = delta > this.settings.maxDelta ? this.settings.maxDelta : delta;
+        delta = delta < -this.settings.maxDelta ? -this.settings.maxDelta : delta;
+
+        return delta;
     }
 
     private initializeSlides() {
@@ -113,14 +166,6 @@ export default class Slider {
         }
     }
 
-    private initializeSlide(slide: HTMLElement | undefined, className: string): void {
-        if (slide) {
-            slide.classList.add(className);
-            slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
-            slide.style.transform = null;
-        }
-    }
-
     private removeSlideFromNavigation(slide: HTMLElement): void {
         slide.classList.remove(
             CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.LEFT,
@@ -131,70 +176,12 @@ export default class Slider {
         slide.style.transform = null;
     }
 
-    private handleTouchStart(event: TouchEvent): void {
-        if (event.touches.length === 1 && !this.swipeStarted) {
-            this.swipeDetecting = true;
-            this.startTouch = event.changedTouches[0];
+    private initializeSlide(slide: HTMLElement | undefined, className: string): void {
+        if (slide) {
+            slide.classList.add(className);
+            slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
+            slide.style.transform = null;
         }
-        this.startTime = performance.now();
-    }
-
-    private handleTouchMove(event: TouchEvent): void {
-        if (event.touches.length === 1) {
-            event.preventDefault();
-            if (this.swipeDetecting) {
-                if (this.isHorizontalSwipe(event.changedTouches[0])) {
-                    this.swipeStarted = true;
-                }
-                this.swipeDetecting = false;
-            }
-            if (this.swipeStarted) {
-                this.slide(this.getDelta(event.changedTouches[0]));
-            }
-        }
-    }
-
-    /**
-     * If horizontal offset greater than vertical then it is swipe
-     * @param {Touch} touch - touch to check
-     */
-    private isHorizontalSwipe(touch: Touch): boolean {
-        return Math.abs(this.startTouch.pageX - touch.pageX) >=
-            Math.abs(this.startTouch.pageY - touch.pageY);
-    }
-
-    private handleTouchEnd(event: TouchEvent): void {
-        if (this.swipeStarted) {
-            event.preventDefault();
-            this.slideTo(this.getDelta(event.changedTouches[0]));
-        }
-        this.swipeStarted = false;
-    }
-
-    private getDelta(touch: Touch): number {
-        let delta: number = touch.pageX - this.startTouch.pageX;
-        if ((delta > 0 && !this.leftSlide) || (delta < 0 && !this.rightSlide)) {
-            delta = delta / this.settings.boundaryResistanceReduction;
-        }
-        delta = delta / this.element.clientWidth * 100;
-        delta = delta > this.settings.maxDelta ? this.settings.maxDelta : delta;
-        delta = delta < -this.settings.maxDelta ? -this.settings.maxDelta : delta;
-
-        return delta;
-    }
-
-    private handleTransitionEnd(): void {
-        this.getSlides().forEach((slide) =>
-            slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
-        if (this.slideToLeftAnimation) {
-            this.centerSlide = (this.leftSlide as HTMLElement);
-            this.slideToLeftAnimation = false;
-        }
-        if (this.slideToRightAnimation) {
-            this.centerSlide = (this.rightSlide as HTMLElement);
-            this.slideToRightAnimation = false;
-        }
-        this.resetNavigationInAccordanceWithCurrentSlide();
     }
 
     private getSlides(): HTMLElement[] {
@@ -209,17 +196,17 @@ export default class Slider {
         const excessTimeThreshold: boolean = performance.now() - this.startTime < this.settings.timeThresholdInMs;
         const shouldSlide: boolean = excessDeltaThreshold || excessTimeThreshold;
         if (shouldSlide && delta < 0 && this.rightSlide) {
-            this.slide(-100);
+            this.setTranslate(-100);
             this.slideToRightAnimation = true;
         } else if (shouldSlide && delta > 0 && this.leftSlide) {
-            this.slide(100);
+            this.setTranslate(100);
             this.slideToLeftAnimation = true;
         } else {
-            this.slide(0);
+            this.setTranslate(0);
         }
     }
 
-    private slide(delta: number): void {
+    private setTranslate(delta: number): void {
         if (this.leftSlide) {
             this.leftSlide.style.transform = `translate3d(${delta - 100}%, 0, 0`;
         }

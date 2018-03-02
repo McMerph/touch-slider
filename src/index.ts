@@ -12,6 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
     slider.appendSlide(getDiv("red"));
     slider.appendSlide(getDiv("green"));
     slider.appendSlide(getDiv("blue"));
+
+    const previousElement: HTMLElement = document.querySelector(".previous") as HTMLElement;
+    previousElement.addEventListener("click", () => slider.previous());
+
+    const nextElement: HTMLElement = document.querySelector(".next") as HTMLElement;
+    nextElement.addEventListener("click", () => slider.next());
 });
 
 const getDiv: (className: string) => HTMLElement = (className) => {
