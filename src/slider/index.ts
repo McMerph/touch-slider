@@ -8,6 +8,8 @@ interface ISettings {
     timeThresholdInMs: number;
 }
 
+enum State { Idle, TouchStarted, Swipe, SlideToPrevious, SlideToNext,}
+
 export default class Slider {
 
     private static defaultSettings: ISettings = {
@@ -17,7 +19,7 @@ export default class Slider {
         timeThresholdInMs: 300,
     };
 
-    private readonly element: Element;
+    private readonly container: Element;
     private readonly settings: ISettings;
 
     private leftSlide: HTMLElement | undefined;
@@ -25,18 +27,15 @@ export default class Slider {
     private rightSlide: HTMLElement | undefined;
     private startTouch: Touch;
 
-    private swipeStarted: boolean = false;
-    private swipeDetecting: boolean = false;
-    private slideToLeftAnimation: boolean = false;
-    private slideToRightAnimation: boolean = false;
+    private state: State = State.Idle;
     private startTime: number;
 
-    public constructor(element: HTMLElement, settings?: Partial<ISettings>) {
-        this.element = element;
+    public constructor(container: HTMLElement, settings?: Partial<ISettings>) {
+        this.container = container;
         this.settings = {...Slider.defaultSettings, ...settings};
 
         this.addEventListeners();
-        this.element.classList.add(CLASS_NAMES.BLOCK);
+        this.container.classList.add(CLASS_NAMES.BLOCK);
         this.initializeSlides();
     }
 
@@ -45,13 +44,13 @@ export default class Slider {
             CLASS_NAMES.ELEMENTS.SLIDE.NAME,
             CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
         );
-        this.element.appendChild(slide);
+        this.container.appendChild(slide);
         this.initializeSlides();
     }
 
     public updateClassNames(): void {
-        for (let i = 0; i < this.element.children.length; i++) {
-            const child: Element = this.element.children.item(i);
+        for (let i = 0; i < this.container.children.length; i++) {
+            const child: Element = this.container.children.item(i);
             child.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.NAME);
             if (child !== this.leftSlide && child !== this.centerSlide && child !== this.rightSlide) {
                 child.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
@@ -68,51 +67,47 @@ export default class Slider {
     }
 
     private addEventListeners(): void {
-        this.element.addEventListener("touchstart", (event) => {
-            if (event.touches.length === 1 && !this.swipeStarted) {
-                this.swipeDetecting = true;
+        this.container.addEventListener("touchstart", (event) => {
+            if (event.touches.length === 1 && this.state !== State.Swipe) {
                 this.startTouch = event.changedTouches[0];
+                this.state = State.TouchStarted;
             }
             this.startTime = performance.now();
         });
 
-        this.element.addEventListener("touchmove", (event) => {
+        this.container.addEventListener("touchmove", (event) => {
             if (event.touches.length === 1) {
                 event.preventDefault();
-                if (this.swipeDetecting) {
+                if (this.state === State.TouchStarted) {
                     if (this.isHorizontalSwipe(event.changedTouches[0])) {
-                        this.swipeStarted = true;
+                        this.state = State.Swipe;
                     }
-                    this.swipeDetecting = false;
-                }
-                if (this.swipeStarted) {
+                } else if (this.state === State.Swipe) {
                     this.setTranslate(this.getDelta(event.changedTouches[0]));
                 }
             }
         });
 
         const handleTouchEnd: (event: TouchEvent) => void = (event) => {
-            if (this.swipeStarted) {
+            if (this.state === State.Swipe) {
                 event.preventDefault();
                 this.slideTo(this.getDelta(event.changedTouches[0]));
             }
-            this.swipeStarted = false;
         };
-        this.element.addEventListener("touchend", handleTouchEnd);
-        this.element.addEventListener("touchcancel", handleTouchEnd);
+        this.container.addEventListener("touchend", handleTouchEnd);
+        this.container.addEventListener("touchcancel", handleTouchEnd);
 
-        this.element.addEventListener("transitionend", () => {
+        this.container.addEventListener("transitionend", () => {
             this.getSlides().forEach((slide) =>
                 slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
-            if (this.slideToLeftAnimation) {
+            if (this.state === State.SlideToPrevious) {
                 this.centerSlide = this.leftSlide;
-                this.slideToLeftAnimation = false;
             }
-            if (this.slideToRightAnimation) {
+            if (this.state === State.SlideToNext) {
                 this.centerSlide = this.rightSlide;
-                this.slideToRightAnimation = false;
             }
             this.resetSlides();
+            this.state = State.Idle;
         });
     }
 
@@ -130,7 +125,7 @@ export default class Slider {
         if ((delta > 0 && !this.leftSlide) || (delta < 0 && !this.rightSlide)) {
             delta = delta / this.settings.boundaryResistanceReduction;
         }
-        delta = delta / this.element.clientWidth * 100;
+        delta = delta / this.container.clientWidth * 100;
         delta = Math.min(delta, this.settings.maxDelta);
         delta = Math.max(delta, -this.settings.maxDelta);
 
@@ -138,8 +133,8 @@ export default class Slider {
     }
 
     private initializeSlides() {
-        this.centerSlide = this.element.firstElementChild ?
-            (this.element.firstElementChild as HTMLElement) : undefined;
+        this.centerSlide = this.container.firstElementChild ?
+            (this.container.firstElementChild as HTMLElement) : undefined;
         if (this.centerSlide) {
             this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
         }
@@ -150,9 +145,9 @@ export default class Slider {
     }
 
     private resetSlides(): void {
-        if (this.element.children.length > 0) {
-            for (let i = 0; i < this.element.children.length; i++) {
-                this.removeSlideFromNavigation((this.element.children.item(i)) as HTMLElement);
+        if (this.container.children.length > 0) {
+            for (let i = 0; i < this.container.children.length; i++) {
+                this.removeSlideFromNavigation((this.container.children.item(i)) as HTMLElement);
             }
             if (this.centerSlide) {
                 this.leftSlide = this.centerSlide.previousElementSibling ?
@@ -197,10 +192,10 @@ export default class Slider {
         const shouldSlide: boolean = excessDeltaThreshold || excessTimeThreshold;
         if (shouldSlide && delta < 0 && this.rightSlide) {
             this.setTranslate(-100);
-            this.slideToRightAnimation = true;
+            this.state = State.SlideToNext;
         } else if (shouldSlide && delta > 0 && this.leftSlide) {
             this.setTranslate(100);
-            this.slideToLeftAnimation = true;
+            this.state = State.SlideToPrevious;
         } else {
             this.setTranslate(0);
         }
