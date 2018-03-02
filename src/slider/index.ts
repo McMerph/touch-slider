@@ -193,7 +193,7 @@ export default class Slider {
         } else if (shouldSlide && delta > 0 && this.leftSlide) {
             this.slideToLeft();
         } else {
-            this.resetSlidesPositions();
+            this.moveTo(0);
         }
     }
 
@@ -209,25 +209,11 @@ export default class Slider {
         this.slideToLeftAnimation = true;
     }
 
-    private resetSlidesPositions(): void {
-        if (this.leftSlide) {
-            this.leftSlide.style.transform = "translate3d(-100%, 0, 0)";
-        }
-
-        this.centerSlide.style.transform = "translate3d(0, 0, 0)";
-
-        if (this.rightSlide) {
-            this.rightSlide.style.transform = "translate3d(100%, 0, 0)";
-        }
-    }
-
     private moveTo(delta: number): void {
         if (this.leftSlide) {
             this.leftSlide.style.transform = `translate3d(${delta - 100}%, 0, 0`;
         }
-
         this.centerSlide.style.transform = `translate3d(${delta}%, 0, 0`;
-
         if (this.rightSlide) {
             this.rightSlide.style.transform = `translate3d(${delta + 100}%, 0, 0`;
         }
