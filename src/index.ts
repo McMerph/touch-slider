@@ -1,16 +1,17 @@
 import "normalize.css/normalize.css";
 import "./index.css";
+
 import Slider from "./slider/index";
 
 document.addEventListener("DOMContentLoaded", () => {
     const touchTestElement: HTMLElement = document.querySelector(".touch-test") as HTMLElement;
-    touchTestElement.appendChild(getDiv("red"));
-    touchTestElement.appendChild(getDiv("green"));
-    touchTestElement.appendChild(getDiv("blue"));
-    touchTestElement.appendChild(getDiv("red"));
-    touchTestElement.appendChild(getDiv("green"));
-    touchTestElement.appendChild(getDiv("blue"));
-    new Slider(touchTestElement);
+    const slider: Slider = new Slider(touchTestElement);
+    slider.appendSlide(getDiv("red"));
+    slider.appendSlide(getDiv("green"));
+    slider.appendSlide(getDiv("blue"));
+    slider.appendSlide(getDiv("red"));
+    slider.appendSlide(getDiv("green"));
+    slider.appendSlide(getDiv("blue"));
 });
 
 const getDiv: (className: string) => HTMLElement = (className) => {

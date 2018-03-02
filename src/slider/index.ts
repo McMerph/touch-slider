@@ -38,15 +38,7 @@ export default class Slider {
 
         this.addEventListeners();
         this.element.classList.add(CLASS_NAMES.BLOCK);
-        this.centerSlide = this.element.firstElementChild ?
-            (this.element.firstElementChild as HTMLElement) : undefined;
-        if (this.centerSlide) {
-            this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
-        }
-        this.updateClassNames();
-        if (this.centerSlide) {
-            this.resetNavigationInAccordanceWithCurrentSlide();
-        }
+        this.initializeSlides();
     }
 
     public appendSlide(slide: HTMLElement): void {
@@ -55,6 +47,7 @@ export default class Slider {
             CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
         );
         this.element.appendChild(slide);
+        this.initializeSlides();
     }
 
     public updateClassNames(): void {
@@ -89,6 +82,18 @@ export default class Slider {
         this.element.addEventListener("touchend", this.handleTouchEnd);
         this.element.addEventListener("touchcancel", this.handleTouchEnd);
         this.element.addEventListener("transitionend", this.handleTransitionEnd);
+    }
+
+    private initializeSlides() {
+        this.centerSlide = this.element.firstElementChild ?
+            (this.element.firstElementChild as HTMLElement) : undefined;
+        if (this.centerSlide) {
+            this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
+        }
+        this.updateClassNames();
+        if (this.centerSlide) {
+            this.resetNavigationInAccordanceWithCurrentSlide();
+        }
     }
 
     private resetNavigationInAccordanceWithCurrentSlide(): void {
