@@ -8,7 +8,7 @@ interface ISettings {
     timeThresholdInMs: number;
 }
 
-enum State { Idle, TouchStarted, Swipe, SlideToPrevious, SlideToNext,}
+enum State { Idle, TouchStarted, Swipe, SwipeEnd, SlideToPrevious, SlideToNext}
 
 export default class Slider {
 
@@ -68,7 +68,7 @@ export default class Slider {
 
     private addEventListeners(): void {
         this.container.addEventListener("touchstart", (event) => {
-            if (event.touches.length === 1 && this.state !== State.Swipe) {
+            if (event.touches.length === 1 && this.state === State.Idle) {
                 this.startTouch = event.changedTouches[0];
                 this.state = State.TouchStarted;
             }
@@ -198,6 +198,7 @@ export default class Slider {
             this.state = State.SlideToPrevious;
         } else {
             this.setTranslate(0);
+            this.state = State.SwipeEnd;
         }
     }
 
