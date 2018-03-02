@@ -20,9 +20,17 @@ document.addEventListener("DOMContentLoaded", () => {
     nextElement.addEventListener("click", () => slider.next());
 });
 
+const counter: () => () => number = () => {
+    let index = 0;
+    return () => ++index;
+};
+
+const getNextIndex: () => number = counter();
+
 const getDiv: (className: string) => HTMLElement = (className) => {
     const div: HTMLDivElement = document.createElement("div");
-    div.classList.add(className);
+    div.classList.add("dummy", className);
+    div.textContent = getNextIndex().toString();
 
     return div;
 };

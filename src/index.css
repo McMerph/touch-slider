@@ -2,14 +2,22 @@
   height: 100px;
 }
 
+.dummy {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 24px;
+}
+
 .red {
-  background-color: red;
+  background: red;
 }
 
 .green {
-  background-color: green;
+  background: green;
 }
 
 .blue {
-  background-color: blue;
+  background: blue;
 }

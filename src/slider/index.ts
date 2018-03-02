@@ -112,7 +112,7 @@ export default class Slider {
                 this.centerSlide = this.rightSlide;
                 this.slideToRightAnimation = false;
             }
-            this.resetNavigationInAccordanceWithCurrentSlide();
+            this.resetSlides();
         });
     }
 
@@ -145,11 +145,11 @@ export default class Slider {
         }
         this.updateClassNames();
         if (this.centerSlide) {
-            this.resetNavigationInAccordanceWithCurrentSlide();
+            this.resetSlides();
         }
     }
 
-    private resetNavigationInAccordanceWithCurrentSlide(): void {
+    private resetSlides(): void {
         if (this.element.children.length > 0) {
             for (let i = 0; i < this.element.children.length; i++) {
                 this.removeSlideFromNavigation((this.element.children.item(i)) as HTMLElement);
@@ -207,14 +207,14 @@ export default class Slider {
     }
 
     private setTranslate(delta: number): void {
-        if (this.leftSlide) {
-            this.leftSlide.style.transform = `translate3d(${delta - 100}%, 0, 0`;
-        }
-        if (this.centerSlide) {
-            this.centerSlide.style.transform = `translate3d(${delta}%, 0, 0`;
-        }
-        if (this.rightSlide) {
-            this.rightSlide.style.transform = `translate3d(${delta + 100}%, 0, 0`;
+        this.setSlideTranslate(this.leftSlide, delta - 100);
+        this.setSlideTranslate(this.centerSlide, delta);
+        this.setSlideTranslate(this.rightSlide, delta + 100);
+    }
+
+    private setSlideTranslate(slide: HTMLElement | undefined, percentage: number): void {
+        if (slide) {
+            slide.style.transform = `translate3d(${percentage}%, 0, 0`;
         }
     }
 
