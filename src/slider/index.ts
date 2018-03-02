@@ -73,20 +73,18 @@ export default class Slider {
 
     private initializeClassNames() {
         this.element.classList.add(CLASS_NAMES.BLOCK);
+        this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
         for (let i = 0; i < this.element.children.length; i++) {
-            this.element.children[i].classList.add(
+            this.element.children.item(i).classList.add(
                 CLASS_NAMES.ELEMENTS.SLIDE.NAME,
                 CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
             );
         }
-        this.centerSlide.classList.add(
-            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT,
-        );
     }
 
     private resetNavigationInAccordanceWithCurrentSlide(): void {
         for (let i = 0; i < this.element.children.length; i++) {
-            this.removeSlideFromNavigation((this.element.children[i]) as HTMLElement);
+            this.removeSlideFromNavigation((this.element.children.item(i)) as HTMLElement);
         }
         this.leftSlide = this.centerSlide.previousElementSibling ?
             (this.centerSlide.previousElementSibling as HTMLElement) : undefined;
