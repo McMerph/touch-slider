@@ -131,8 +131,8 @@ export default class Slider {
             delta = delta / this.settings.boundaryResistanceReduction;
         }
         delta = delta / this.element.clientWidth * 100;
-        delta = delta > this.settings.maxDelta ? this.settings.maxDelta : delta;
-        delta = delta < -this.settings.maxDelta ? -this.settings.maxDelta : delta;
+        delta = Math.min(delta, this.settings.maxDelta);
+        delta = Math.max(delta, -this.settings.maxDelta);
 
         return delta;
     }
