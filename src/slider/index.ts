@@ -133,7 +133,7 @@ export default class Slider {
                 this.swipeDetecting = false;
             }
             if (this.swipeStarted) {
-                this.moveTo(this.getDelta(event.changedTouches[0]));
+                this.slide(this.getDelta(event.changedTouches[0]));
             }
         }
     }
@@ -185,31 +185,23 @@ export default class Slider {
     }
 
     private slideTo(delta: number): void {
-        this.getSlides().forEach((slide) => slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
-        const shouldSlide: boolean = Math.abs(delta) > this.settings.deltaThreshold ||
-            performance.now() - this.startTime < this.settings.timeThresholdInMs;
+        this.getSlides().forEach((slide) =>
+            slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
+        const excessDeltaThreshold: boolean = Math.abs(delta) > this.settings.deltaThreshold;
+        const excessTimeThreshold: boolean = performance.now() - this.startTime < this.settings.timeThresholdInMs;
+        const shouldSlide: boolean = excessDeltaThreshold || excessTimeThreshold;
         if (shouldSlide && delta < 0 && this.rightSlide) {
-            this.slideToRight();
+            this.slide(-100);
+            this.slideToRightAnimation = true;
         } else if (shouldSlide && delta > 0 && this.leftSlide) {
-            this.slideToLeft();
+            this.slide(100);
+            this.slideToLeftAnimation = true;
         } else {
-            this.moveTo(0);
+            this.slide(0);
         }
     }
 
-    private slideToRight(): void {
-        (this.rightSlide as HTMLElement).style.transform = "translate3d(0, 0, 0)";
-        this.centerSlide.style.transform = "translate3d(-100%, 0, 0)";
-        this.slideToRightAnimation = true;
-    }
-
-    private slideToLeft(): void {
-        (this.leftSlide as HTMLElement).style.transform = "translate3d(0, 0, 0)";
-        this.centerSlide.style.transform = "translate3d(100%, 0, 0)";
-        this.slideToLeftAnimation = true;
-    }
-
-    private moveTo(delta: number): void {
+    private slide(delta: number): void {
         if (this.leftSlide) {
             this.leftSlide.style.transform = `translate3d(${delta - 100}%, 0, 0`;
         }
