@@ -47,11 +47,11 @@ export default class Slider {
         }
     }
 
-    public manualSlideToLeft(): void {
+    public slideToLeft(): void {
         this.slideTo(100);
     }
 
-    public manualSlideToRight(): void {
+    public slideToRight(): void {
         this.slideTo(-100);
     }
 
@@ -168,7 +168,8 @@ export default class Slider {
     }
 
     private handleTransitionEnd(): void {
-        this.getSlides().forEach((slide) => slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
+        this.getSlides().forEach((slide) =>
+            slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
         if (this.slideToLeftAnimation) {
             this.centerSlide = (this.leftSlide as HTMLElement);
             this.slideToLeftAnimation = false;
@@ -181,7 +182,8 @@ export default class Slider {
     }
 
     private getSlides(): HTMLElement[] {
-        return [this.leftSlide, this.centerSlide, this.rightSlide].filter((slide) => slide) as HTMLElement[];
+        return [this.leftSlide, this.centerSlide, this.rightSlide]
+            .filter((slide) => slide) as HTMLElement[];
     }
 
     private slideTo(delta: number): void {
