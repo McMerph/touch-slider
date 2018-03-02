@@ -18,6 +18,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const nextElement: HTMLElement = document.querySelector(".next") as HTMLElement;
     nextElement.addEventListener("click", () => slider.next());
+
+    const form: HTMLElement = document.querySelector(".form") as HTMLElement;
+    form.addEventListener("submit", (event: Event) => {
+        event.preventDefault();
+        const input: HTMLInputElement = document.querySelector(".index") as HTMLInputElement;
+        const index: number = Number.parseInt(input.value);
+        slider.goTo(index);
+    });
 });
 
 const counter: () => () => number = () => {

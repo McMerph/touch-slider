@@ -28,6 +28,7 @@ export default class Slider {
     private startTouch: Touch;
 
     private state: State = State.Idle;
+    private currentIndex: number = 1;
     private startTime: number;
 
     public constructor(container: HTMLElement, settings?: Partial<ISettings>) {
@@ -66,6 +67,14 @@ export default class Slider {
         this.slideTo(-100);
     }
 
+    // TODO goTo() vs slideTo()
+    public goTo(index: number): void {
+        const delta = (this.currentIndex - index) * 100;
+        console.log(`Сейчас сижу на ${this.currentIndex}`);
+        console.log(`delta = ${delta}`);
+        console.log(`А не пойти бы мне на ${index}? Не, пока не умею`);
+    }
+
     private addEventListeners(): void {
         this.container.addEventListener("touchstart", (event) => {
             if (event.touches.length === 1 && this.state === State.Idle) {
@@ -102,9 +111,11 @@ export default class Slider {
                 slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
             if (this.state === State.SlideToPrevious) {
                 this.centerSlide = this.leftSlide;
+                this.currentIndex--;
             }
             if (this.state === State.SlideToNext) {
                 this.centerSlide = this.rightSlide;
+                this.currentIndex++;
             }
             this.resetSlides();
             this.state = State.Idle;
