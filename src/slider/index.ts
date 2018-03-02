@@ -39,11 +39,23 @@ export default class Slider {
         this.settings = {...Slider.defaultSettings, ...settings};
         this.bind();
 
-        this.initializeEventListeners();
+        this.addEventListeners();
+        this.element.classList.add(CLASS_NAMES.BLOCK);
         this.centerSlide = (this.element.firstElementChild as HTMLElement);
+        this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
+        this.updateClassNames();
         if (this.element.children.length > 0) {
-            this.initializeClassNames();
             this.resetNavigationInAccordanceWithCurrentSlide();
+        }
+    }
+
+    public updateClassNames() {
+        for (let i = 0; i < this.element.children.length; i++) {
+            const child: Element = this.element.children.item(i);
+            child.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.NAME);
+            if (child !== this.leftSlide && child !== this.centerSlide && child !== this.rightSlide) {
+                child.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
+            }
         }
     }
 
@@ -63,7 +75,7 @@ export default class Slider {
         this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
     }
 
-    private initializeEventListeners() {
+    private addEventListeners() {
         this.element.addEventListener("touchstart", this.handleTouchStart);
         this.element.addEventListener("touchmove", this.handleTouchMove);
         this.element.addEventListener("touchend", this.handleTouchEnd);
@@ -71,28 +83,19 @@ export default class Slider {
         this.element.addEventListener("transitionend", this.handleTransitionEnd);
     }
 
-    private initializeClassNames() {
-        this.element.classList.add(CLASS_NAMES.BLOCK);
-        this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
-        for (let i = 0; i < this.element.children.length; i++) {
-            this.element.children.item(i).classList.add(
-                CLASS_NAMES.ELEMENTS.SLIDE.NAME,
-                CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
-            );
-        }
-    }
-
     private resetNavigationInAccordanceWithCurrentSlide(): void {
-        for (let i = 0; i < this.element.children.length; i++) {
-            this.removeSlideFromNavigation((this.element.children.item(i)) as HTMLElement);
+        if (this.element.children.length > 0) {
+            for (let i = 0; i < this.element.children.length; i++) {
+                this.removeSlideFromNavigation((this.element.children.item(i)) as HTMLElement);
+            }
+            this.leftSlide = this.centerSlide.previousElementSibling ?
+                (this.centerSlide.previousElementSibling as HTMLElement) : undefined;
+            this.rightSlide = this.centerSlide.nextElementSibling ?
+                (this.centerSlide.nextElementSibling as HTMLElement) : undefined;
+            this.initializeSlide(this.centerSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
+            this.initializeSlide(this.leftSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.LEFT);
+            this.initializeSlide(this.rightSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.RIGHT);
         }
-        this.leftSlide = this.centerSlide.previousElementSibling ?
-            (this.centerSlide.previousElementSibling as HTMLElement) : undefined;
-        this.rightSlide = this.centerSlide.nextElementSibling ?
-            (this.centerSlide.nextElementSibling as HTMLElement) : undefined;
-        this.initializeSlide(this.centerSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
-        this.initializeSlide(this.leftSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.LEFT);
-        this.initializeSlide(this.rightSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.RIGHT);
     }
 
     private initializeSlide(slide: HTMLElement | undefined, className: string): void {
