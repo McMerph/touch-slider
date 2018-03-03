@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
         const input: HTMLInputElement = document.querySelector(".index") as HTMLInputElement;
         const index: number = Number.parseInt(input.value);
-        slider.goTo(index);
+        slider.goToSlide(index);
     });
 });
 

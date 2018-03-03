@@ -4,84 +4,74 @@ import "./index.css";
 interface ISettings {
     boundaryResistanceReduction: number;
     deltaThreshold: number;
-    maxDelta: number;
     timeThresholdInMs: number;
 }
 
-enum State { Idle, TouchStarted, Swipe, SwipeEnd, SlideToPrevious, SlideToNext}
+enum State { Idle, TouchStarted, Swipe, Positioning }
 
 export default class Slider {
 
     private static defaultSettings: ISettings = {
         boundaryResistanceReduction: 5,
         deltaThreshold: 50,
-        maxDelta: 95,
         timeThresholdInMs: 300,
     };
 
-    private readonly container: Element;
+    private readonly container: HTMLElement;
+    private readonly wrapper: HTMLElement;
     private readonly settings: ISettings;
-
-    private leftSlide: HTMLElement | undefined;
-    private centerSlide: HTMLElement | undefined;
-    private rightSlide: HTMLElement | undefined;
-    private startTouch: Touch;
-
     private state: State = State.Idle;
-    private currentIndex: number = 1;
+    private currentIndex: number = 0;
+
+    private startTouch: Touch;
     private startTime: number;
 
     public constructor(container: HTMLElement, settings?: Partial<ISettings>) {
         this.container = container;
         this.settings = {...Slider.defaultSettings, ...settings};
 
-        this.addEventListeners();
+        this.wrapper = document.createElement("div");
+        this.wrapper.classList.add(CLASS_NAMES.ELEMENTS.WRAPPER);
         this.container.classList.add(CLASS_NAMES.BLOCK);
-        this.initializeSlides();
+        this.container.appendChild(this.wrapper);
+        this.addEventListeners();
+        this.updateClassNames();
     }
 
     public appendSlide(slide: HTMLElement): void {
-        slide.classList.add(
-            CLASS_NAMES.ELEMENTS.SLIDE.NAME,
-            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN,
-        );
-        this.container.appendChild(slide);
-        this.initializeSlides();
+        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
+        this.wrapper.appendChild(slide);
     }
 
     public updateClassNames(): void {
         for (let i = 0; i < this.container.children.length; i++) {
-            const child: Element = this.container.children.item(i);
-            child.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.NAME);
-            if (child !== this.leftSlide && child !== this.centerSlide && child !== this.rightSlide) {
-                child.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
-            }
+            this.container.children.item(i).classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
         }
     }
 
     public previous(): void {
-        this.slideTo(100);
+        this.goToSlide(this.currentIndex);
     }
 
     public next(): void {
-        this.slideTo(-100);
+        this.goToSlide(this.currentIndex + 2);
     }
 
     // TODO goTo() vs slideTo()
-    public goTo(index: number): void {
-        const delta = (this.currentIndex - index) * 100;
-        console.log(`Сейчас сижу на ${this.currentIndex}`);
-        console.log(`delta = ${delta}`);
-        console.log(`А не пойти бы мне на ${index}? Не, пока не умею`);
+    public goToSlide(index: number): void {
+        console.log(`this.currentIndex = ${this.currentIndex}`);
+        this.state = State.Positioning;
+        this.slideTo((this.currentIndex - Math.floor(index - 1)) * 100);
     }
 
     private addEventListeners(): void {
         this.container.addEventListener("touchstart", (event) => {
             if (event.touches.length === 1 && this.state === State.Idle) {
+                event.preventDefault();
                 this.startTouch = event.changedTouches[0];
+                this.startTime = performance.now();
                 this.state = State.TouchStarted;
             }
-            this.startTime = performance.now();
         });
 
         this.container.addEventListener("touchmove", (event) => {
@@ -92,7 +82,7 @@ export default class Slider {
                         this.state = State.Swipe;
                     }
                 } else if (this.state === State.Swipe) {
-                    this.setTranslate(this.getDelta(event.changedTouches[0]));
+                    this.setTranslate(this.getOffsetInPercents(event.changedTouches[0]));
                 }
             }
         });
@@ -100,24 +90,15 @@ export default class Slider {
         const handleTouchEnd: (event: TouchEvent) => void = (event) => {
             if (this.state === State.Swipe) {
                 event.preventDefault();
-                this.slideTo(this.getDelta(event.changedTouches[0]));
+                this.state = State.Positioning;
+                this.slideTo(this.getOffsetInPercents(event.changedTouches[0]));
             }
         };
         this.container.addEventListener("touchend", handleTouchEnd);
         this.container.addEventListener("touchcancel", handleTouchEnd);
 
         this.container.addEventListener("transitionend", () => {
-            this.getSlides().forEach((slide) =>
-                slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
-            if (this.state === State.SlideToPrevious) {
-                this.centerSlide = this.leftSlide;
-                this.currentIndex--;
-            }
-            if (this.state === State.SlideToNext) {
-                this.centerSlide = this.rightSlide;
-                this.currentIndex++;
-            }
-            this.resetSlides();
+            this.wrapper.classList.remove(CLASS_NAMES.MODIFIERS.ANIMATING);
             this.state = State.Idle;
         });
     }
@@ -131,97 +112,68 @@ export default class Slider {
             Math.abs(this.startTouch.pageY - touch.pageY);
     }
 
-    private getDelta(touch: Touch): number {
-        let delta: number = touch.pageX - this.startTouch.pageX;
-        if ((delta > 0 && !this.leftSlide) || (delta < 0 && !this.rightSlide)) {
-            delta = delta / this.settings.boundaryResistanceReduction;
+    private getOffsetInPercents(touch: Touch): number {
+        const offsetInPixels: number = touch.pageX - this.startTouch.pageX;
+
+        let offsetInPercents = offsetInPixels / this.container.clientWidth * 100;
+        let requestedSlideIndex = Math.ceil(this.currentIndex - offsetInPercents / 100);
+        if (offsetInPixels > 0) {
+            requestedSlideIndex--;
         }
-        delta = delta / this.container.clientWidth * 100;
-        delta = Math.min(delta, this.settings.maxDelta);
-        delta = Math.max(delta, -this.settings.maxDelta);
-
-        return delta;
-    }
-
-    private initializeSlides() {
-        this.centerSlide = this.container.firstElementChild ?
-            (this.container.firstElementChild as HTMLElement) : undefined;
-        if (this.centerSlide) {
-            this.centerSlide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
+        if (requestedSlideIndex < 0) {
+            const offsetInPercentsToLeftBoundary = this.getOffsetInPercentsToLeft();
+            offsetInPercents = offsetInPercentsToLeftBoundary +
+                (offsetInPercents - offsetInPercentsToLeftBoundary) / this.settings.boundaryResistanceReduction;
+        } else if (requestedSlideIndex > this.wrapper.children.length - 1) {
+            const offsetInPercentsToRightBoundary = this.getOffsetInPercentsToRight();
+            offsetInPercents = offsetInPercentsToRightBoundary +
+                (offsetInPercents - offsetInPercentsToRightBoundary) / this.settings.boundaryResistanceReduction;
         }
-        this.updateClassNames();
-        if (this.centerSlide) {
-            this.resetSlides();
-        }
+
+        return offsetInPercents;
     }
 
-    private resetSlides(): void {
-        if (this.container.children.length > 0) {
-            for (let i = 0; i < this.container.children.length; i++) {
-                this.removeSlideFromNavigation((this.container.children.item(i)) as HTMLElement);
-            }
-            if (this.centerSlide) {
-                this.leftSlide = this.centerSlide.previousElementSibling ?
-                    (this.centerSlide.previousElementSibling as HTMLElement) : undefined;
-                this.rightSlide = this.centerSlide.nextElementSibling ?
-                    (this.centerSlide.nextElementSibling as HTMLElement) : undefined;
-            }
-            this.initializeSlide(this.centerSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT);
-            this.initializeSlide(this.leftSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.LEFT);
-            this.initializeSlide(this.rightSlide, CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.RIGHT);
-        }
+    private getOffsetInPercentsToLeft(): number {
+        return this.currentIndex * 100;
     }
 
-    private removeSlideFromNavigation(slide: HTMLElement): void {
-        slide.classList.remove(
-            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.LEFT,
-            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.CURRENT,
-            CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.RIGHT,
-        );
-        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
-        slide.style.transform = null;
+    private getOffsetInPercentsToRight(): number {
+        return (this.currentIndex + 1 - this.wrapper.children.length) * 100;
     }
 
-    private initializeSlide(slide: HTMLElement | undefined, className: string): void {
-        if (slide) {
-            slide.classList.add(className);
-            slide.classList.remove(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.HIDDEN);
-            slide.style.transform = null;
-        }
+    private isExcessBoundary(delta: number): boolean {
+        return (delta > 0 && (this.currentIndex !== 0)) ||
+            (delta < 0 && (this.currentIndex !== this.wrapper.children.length - 1));
     }
 
-    private getSlides(): HTMLElement[] {
-        return [this.leftSlide, this.centerSlide, this.rightSlide]
-            .filter((slide) => slide) as HTMLElement[];
-    }
-
-    private slideTo(delta: number): void {
-        this.getSlides().forEach((slide) =>
-            slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE.MODIFIERS.ANIMATING));
-        const excessDeltaThreshold: boolean = Math.abs(delta) > this.settings.deltaThreshold;
+    // TODO Rename?
+    private slideTo(offsetInPercents: number): void {
+        const excessDeltaThreshold: boolean = Math.abs(offsetInPercents) > this.settings.deltaThreshold;
         const excessTimeThreshold: boolean = performance.now() - this.startTime < this.settings.timeThresholdInMs;
-        const shouldSlide: boolean = excessDeltaThreshold || excessTimeThreshold;
-        if (shouldSlide && delta < 0 && this.rightSlide) {
-            this.setTranslate(-100);
-            this.state = State.SlideToNext;
-        } else if (shouldSlide && delta > 0 && this.leftSlide) {
-            this.setTranslate(100);
-            this.state = State.SlideToPrevious;
+        const shouldSlide: boolean = (excessDeltaThreshold || excessTimeThreshold) && this.isExcessBoundary(offsetInPercents);
+        if (shouldSlide) {
+            // TODO Delete?
+            const offset = Math.ceil(Math.abs(offsetInPercents) / 100);
+            this.setTranslate(offsetInPercents > 0 ? offset * 100 : -offset * 100);
         } else {
             this.setTranslate(0);
-            this.state = State.SwipeEnd;
         }
+        this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
     }
 
-    private setTranslate(delta: number): void {
-        this.setSlideTranslate(this.leftSlide, delta - 100);
-        this.setSlideTranslate(this.centerSlide, delta);
-        this.setSlideTranslate(this.rightSlide, delta + 100);
-    }
-
-    private setSlideTranslate(slide: HTMLElement | undefined, percentage: number): void {
-        if (slide) {
-            slide.style.transform = `translate3d(${percentage}%, 0, 0`;
+    private setTranslate(offsetInPercents: number): void {
+        let normalizedOffsetInPercents = offsetInPercents;
+        if (this.state === State.Positioning) {
+            normalizedOffsetInPercents = Math.min(offsetInPercents, this.getOffsetInPercentsToLeft());
+            normalizedOffsetInPercents = Math.max(normalizedOffsetInPercents, this.getOffsetInPercentsToRight());
+            this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + normalizedOffsetInPercents}%, 0, 0`;
+            let normalizedCurrentIndex = this.currentIndex += -normalizedOffsetInPercents / 100;
+            normalizedCurrentIndex = Math.max(normalizedCurrentIndex, 0);
+            normalizedCurrentIndex = Math.min(normalizedCurrentIndex, this.wrapper.children.length - 1);
+            this.currentIndex = normalizedCurrentIndex;
+            this.state = State.Idle;
+        } else {
+            this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + normalizedOffsetInPercents}%, 0, 0`;
         }
     }
 
