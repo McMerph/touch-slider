@@ -7,7 +7,7 @@ interface ISettings {
     timeThresholdInMs: number;
 }
 
-enum State { Idle, TouchStarted, Swipe }
+enum State { Idle, TouchStarted, Swipe, Positioning }
 
 export default class Slider {
 
@@ -150,11 +150,11 @@ export default class Slider {
                 min: 0,
                 value: this.currentIndex -= offsetToNearestSlide / 100,
             });
-            this.state = State.Idle;
         } else {
             this.move(0);
         }
         this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
+        this.state = State.Positioning;
     }
 
     private move(offset: number): void {
