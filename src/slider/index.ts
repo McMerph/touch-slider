@@ -1,5 +1,6 @@
 import CLASS_NAMES from "./ClassNames";
 import "./index.css";
+import { limit } from "../utils/Utils";
 
 interface ISettings {
     boundaryResistanceReduction: number;
@@ -28,7 +29,7 @@ export default class Slider {
 
     public constructor(container: HTMLElement, settings?: Partial<ISettings>) {
         this.container = container;
-        this.settings = {...Slider.defaultSettings, ...settings};
+        this.settings = { ...Slider.defaultSettings, ...settings };
 
         this.wrapper = document.createElement("div");
         this.wrapper.classList.add(CLASS_NAMES.ELEMENTS.WRAPPER);
@@ -139,16 +140,17 @@ export default class Slider {
         const excessDeltaThreshold: boolean = Math.abs(offset) > this.settings.deltaThreshold;
         const excessTimeThreshold: boolean = performance.now() - this.startTime < this.settings.timeThresholdInMs;
         if (excessDeltaThreshold || excessTimeThreshold) {
-            let offsetToNearestSlide = Math.ceil(Math.abs(offset) / 100);
-            offsetToNearestSlide = offset > 0 ? offsetToNearestSlide * 100 : -offsetToNearestSlide * 100;
-            offsetToNearestSlide = Math.min(offsetToNearestSlide, this.getOffsetToLeft());
-            offsetToNearestSlide = Math.max(offsetToNearestSlide, this.getOffsetToRight());
+            const offsetToNearestSlide = limit({
+                max: this.getOffsetToLeft(),
+                min: this.getOffsetToRight(),
+                value: Math.ceil(Math.abs(offset) / 100) * (offset > 0 ? 100 : -100),
+            });
             this.move(offsetToNearestSlide);
-
-            let normalizedCurrentIndex = this.currentIndex += -offsetToNearestSlide / 100;
-            normalizedCurrentIndex = Math.max(normalizedCurrentIndex, 0);
-            normalizedCurrentIndex = Math.min(normalizedCurrentIndex, this.wrapper.children.length - 1);
-            this.currentIndex = normalizedCurrentIndex;
+            this.currentIndex = limit({
+                max: this.wrapper.children.length - 1,
+                min: 0,
+                value: this.currentIndex -= offsetToNearestSlide / 100,
+            });
             this.state = State.Idle;
         } else {
             this.move(0);
