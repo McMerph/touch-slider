@@ -1,5 +1,7 @@
 import "normalize.css/normalize.css";
+
 import "./index.css";
+import "./slider/index.css";
 
 import Slider from "./slider/index";
 

@@ -1,6 +1,5 @@
-import CLASS_NAMES from "./ClassNames";
-import "./index.css";
 import { limit } from "../utils/Utils";
+import CLASS_NAMES from "./ClassNames";
 
 interface ISettings {
     boundaryResistanceReduction: number;
