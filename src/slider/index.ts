@@ -50,18 +50,16 @@ export default class Slider {
     }
 
     public previous(): void {
-        this.goToSlide(this.currentIndex);
+        this.slideTo(this.currentIndex - 1);
     }
 
     public next(): void {
-        this.goToSlide(this.currentIndex + 2);
+        this.slideTo(this.currentIndex + 1);
     }
 
-    // TODO goTo() vs slideTo()
-    public goToSlide(index: number): void {
-        console.log(`this.currentIndex = ${this.currentIndex}`);
+    public slideTo(index: number): void {
         this.state = State.Positioning;
-        this.slideTo((this.currentIndex - Math.floor(index - 1)) * 100);
+        this.positionTo((this.currentIndex - Math.floor(index)) * 100);
     }
 
     private addEventListeners(): void {
@@ -82,7 +80,7 @@ export default class Slider {
                         this.state = State.Swipe;
                     }
                 } else if (this.state === State.Swipe) {
-                    this.setTranslate(this.getOffsetInPercents(event.changedTouches[0]));
+                    this.move(this.getOffset(event.changedTouches[0]));
                 }
             }
         });
@@ -91,7 +89,7 @@ export default class Slider {
             if (this.state === State.Swipe) {
                 event.preventDefault();
                 this.state = State.Positioning;
-                this.slideTo(this.getOffsetInPercents(event.changedTouches[0]));
+                this.positionTo(this.getOffset(event.changedTouches[0]));
             }
         };
         this.container.addEventListener("touchend", handleTouchEnd);
@@ -112,68 +110,59 @@ export default class Slider {
             Math.abs(this.startTouch.pageY - touch.pageY);
     }
 
-    private getOffsetInPercents(touch: Touch): number {
+    private getOffset(touch: Touch): number {
         const offsetInPixels: number = touch.pageX - this.startTouch.pageX;
 
-        let offsetInPercents = offsetInPixels / this.container.clientWidth * 100;
-        let requestedSlideIndex = Math.ceil(this.currentIndex - offsetInPercents / 100);
+        let offset = offsetInPixels / this.container.clientWidth * 100;
+        let requestedSlideIndex = Math.ceil(this.currentIndex - offset / 100);
         if (offsetInPixels > 0) {
             requestedSlideIndex--;
         }
         if (requestedSlideIndex < 0) {
-            const offsetInPercentsToLeftBoundary = this.getOffsetInPercentsToLeft();
-            offsetInPercents = offsetInPercentsToLeftBoundary +
-                (offsetInPercents - offsetInPercentsToLeftBoundary) / this.settings.boundaryResistanceReduction;
+            const offsetToLeft = this.getOffsetToLeft();
+            offset = offsetToLeft +
+                (offset - offsetToLeft) / this.settings.boundaryResistanceReduction;
         } else if (requestedSlideIndex > this.wrapper.children.length - 1) {
-            const offsetInPercentsToRightBoundary = this.getOffsetInPercentsToRight();
-            offsetInPercents = offsetInPercentsToRightBoundary +
-                (offsetInPercents - offsetInPercentsToRightBoundary) / this.settings.boundaryResistanceReduction;
+            const offsetToRight = this.getOffsetToRight();
+            offset = offsetToRight +
+                (offset - offsetToRight) / this.settings.boundaryResistanceReduction;
         }
 
-        return offsetInPercents;
+        return offset;
     }
 
-    private getOffsetInPercentsToLeft(): number {
+    private getOffsetToLeft(): number {
         return this.currentIndex * 100;
     }
 
-    private getOffsetInPercentsToRight(): number {
+    private getOffsetToRight(): number {
         return (this.currentIndex + 1 - this.wrapper.children.length) * 100;
     }
 
-    private isExcessBoundary(delta: number): boolean {
-        return (delta > 0 && (this.currentIndex !== 0)) ||
-            (delta < 0 && (this.currentIndex !== this.wrapper.children.length - 1));
-    }
-
-    // TODO Rename?
-    private slideTo(offsetInPercents: number): void {
-        const excessDeltaThreshold: boolean = Math.abs(offsetInPercents) > this.settings.deltaThreshold;
+    private positionTo(offset: number): void {
+        const excessDeltaThreshold: boolean = Math.abs(offset) > this.settings.deltaThreshold;
         const excessTimeThreshold: boolean = performance.now() - this.startTime < this.settings.timeThresholdInMs;
-        const shouldSlide: boolean = (excessDeltaThreshold || excessTimeThreshold) && this.isExcessBoundary(offsetInPercents);
-        if (shouldSlide) {
-            // TODO Delete?
-            const offset = Math.ceil(Math.abs(offsetInPercents) / 100);
-            this.setTranslate(offsetInPercents > 0 ? offset * 100 : -offset * 100);
+        if (excessDeltaThreshold || excessTimeThreshold) {
+            const offsetToNearestSlide = Math.ceil(Math.abs(offset) / 100);
+            this.move(offset > 0 ? offsetToNearestSlide * 100 : -offsetToNearestSlide * 100);
         } else {
-            this.setTranslate(0);
+            this.move(0);
         }
         this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
     }
 
-    private setTranslate(offsetInPercents: number): void {
-        let normalizedOffsetInPercents = offsetInPercents;
+    private move(offset: number): void {
         if (this.state === State.Positioning) {
-            normalizedOffsetInPercents = Math.min(offsetInPercents, this.getOffsetInPercentsToLeft());
-            normalizedOffsetInPercents = Math.max(normalizedOffsetInPercents, this.getOffsetInPercentsToRight());
-            this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + normalizedOffsetInPercents}%, 0, 0`;
-            let normalizedCurrentIndex = this.currentIndex += -normalizedOffsetInPercents / 100;
+            let normalizedOffset = Math.min(offset, this.getOffsetToLeft());
+            normalizedOffset = Math.max(normalizedOffset, this.getOffsetToRight());
+            this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + normalizedOffset}%, 0, 0`;
+            let normalizedCurrentIndex = this.currentIndex += -normalizedOffset / 100;
             normalizedCurrentIndex = Math.max(normalizedCurrentIndex, 0);
             normalizedCurrentIndex = Math.min(normalizedCurrentIndex, this.wrapper.children.length - 1);
             this.currentIndex = normalizedCurrentIndex;
             this.state = State.Idle;
         } else {
-            this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + normalizedOffsetInPercents}%, 0, 0`;
+            this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + offset}%, 0, 0`;
         }
     }
 
