@@ -59,7 +59,8 @@ export default class Slider {
     }
 
     public slideTo(index: number): void {
-        this.positionTo((this.currentIndex - Math.floor(index)) * 100);
+        this.offset = (this.currentIndex - Math.floor(index)) * 100;
+        this.moveToNearestSlide();
     }
 
     private addEventListeners(): void {
@@ -89,7 +90,7 @@ export default class Slider {
         const handleTouchEnd: (event: TouchEvent) => void = (event) => {
             if (this.state === State.Swipe) {
                 event.preventDefault();
-                this.positionTo(this.getOffset(event.changedTouches[0]));
+                this.moveToNearestSlide();
             }
         };
         this.container.addEventListener("touchend", handleTouchEnd);
@@ -115,9 +116,7 @@ export default class Slider {
 
         let offset = offsetInPixels / this.container.clientWidth * 100;
         let requestedSlideIndex = Math.ceil(this.currentIndex - offset / 100);
-        if (offsetInPixels > 0) {
-            requestedSlideIndex--;
-        }
+        requestedSlideIndex = offsetInPixels > 0 ? requestedSlideIndex - 1 : requestedSlideIndex;
         if (requestedSlideIndex < 0) {
             const offsetToLeft = this.getOffsetToLeft();
             offset = offsetToLeft + (offset - offsetToLeft) / this.settings.boundaryResistanceReduction;
@@ -137,26 +136,16 @@ export default class Slider {
         return (this.currentIndex + 1 - this.wrapper.children.length) * 100;
     }
 
-    private positionTo(offset: number): void {
-        const excessDeltaThreshold: boolean = Math.abs(offset) > this.settings.deltaThreshold;
+    private moveToNearestSlide(): void {
+        const excessDeltaThreshold: boolean = Math.abs(this.offset) > this.settings.deltaThreshold;
         const excessTimeThreshold: boolean = performance.now() - this.startTime < this.settings.timeThresholdInMs;
-        if (excessDeltaThreshold || excessTimeThreshold) {
-            const offsetToNearestSlide = limit({
-                max: this.getOffsetToLeft(),
-                min: this.getOffsetToRight(),
-                value: Math.ceil(Math.abs(offset) / 100) * (offset > 0 ? 100 : -100),
-            });
-            this.offset = offsetToNearestSlide;
-            this.move();
-            this.currentIndex = limit({
-                max: this.wrapper.children.length - 1,
-                min: 0,
-                value: this.currentIndex -= offsetToNearestSlide / 100,
-            });
-        } else {
-            this.offset = 0;
-            this.move();
-        }
+        this.offset = excessDeltaThreshold || excessTimeThreshold ? limit({
+            max: this.getOffsetToLeft(),
+            min: this.getOffsetToRight(),
+            value: Math.ceil(Math.abs(this.offset) / 100) * (this.offset > 0 ? 100 : -100),
+        }) : 0;
+        this.move();
+        this.currentIndex -= this.offset / 100;
         this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
         this.state = State.Positioning;
     }
