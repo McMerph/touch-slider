@@ -20,9 +20,10 @@ export default class Slider {
     private readonly container: HTMLElement;
     private readonly wrapper: HTMLElement;
     private readonly settings: ISettings;
+
     private state: State = State.Idle;
     private currentIndex: number = 0;
-
+    private offset: number;
     private startTouch: Touch;
     private startTime: number;
 
@@ -79,7 +80,8 @@ export default class Slider {
                         this.state = State.Swipe;
                     }
                 } else if (this.state === State.Swipe) {
-                    this.move(this.getOffset(event.changedTouches[0]));
+                    this.offset = this.getOffset(event.changedTouches[0]);
+                    this.move();
                 }
             }
         });
@@ -144,21 +146,23 @@ export default class Slider {
                 min: this.getOffsetToRight(),
                 value: Math.ceil(Math.abs(offset) / 100) * (offset > 0 ? 100 : -100),
             });
-            this.move(offsetToNearestSlide);
+            this.offset = offsetToNearestSlide;
+            this.move();
             this.currentIndex = limit({
                 max: this.wrapper.children.length - 1,
                 min: 0,
                 value: this.currentIndex -= offsetToNearestSlide / 100,
             });
         } else {
-            this.move(0);
+            this.offset = 0;
+            this.move();
         }
         this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
         this.state = State.Positioning;
     }
 
-    private move(offset: number): void {
-        this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + offset}%, 0, 0`;
+    private move(): void {
+        this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + this.offset}%, 0, 0`;
     }
 
 }
