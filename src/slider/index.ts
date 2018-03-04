@@ -107,22 +107,21 @@ export default class Slider {
      * @param {Touch} touch - touch to check
      */
     private isHorizontalSwipe(touch: Touch): boolean {
-        return Math.abs(this.startTouch.pageX - touch.pageX) >=
+        return Math.abs(this.startTouch.pageX - touch.pageX) >
             Math.abs(this.startTouch.pageY - touch.pageY);
     }
 
     private getOffset(touch: Touch): number {
-        const offsetInPixels: number = touch.pageX - this.startTouch.pageX;
+        const pixelsDelta: number = touch.pageX - this.startTouch.pageX;
+        const indexDelta: number = pixelsDelta / this.container.clientWidth;
+        const pulledSlideIndex: number = Math.ceil(this.currentIndex - indexDelta) - (pixelsDelta > 0 ? 1 : 0);
 
-        let offset = offsetInPixels / this.container.clientWidth * 100;
-        let requestedSlideIndex = Math.ceil(this.currentIndex - offset / 100);
-        requestedSlideIndex = offsetInPixels > 0 ? requestedSlideIndex - 1 : requestedSlideIndex;
-        if (requestedSlideIndex < 0) {
-            const offsetToLeft = this.getOffsetToLeft();
-            offset = offsetToLeft + (offset - offsetToLeft) / this.settings.boundaryResistanceReduction;
-        } else if (requestedSlideIndex > this.wrapper.children.length - 1) {
-            const offsetToRight = this.getOffsetToRight();
-            offset = offsetToRight + (offset - offsetToRight) / this.settings.boundaryResistanceReduction;
+        let offset: number = indexDelta * 100;
+        const beforeLeft: boolean = pulledSlideIndex < 0;
+        const afterRight: boolean = pulledSlideIndex > this.wrapper.children.length - 1;
+        if (beforeLeft || afterRight) {
+            const toBorder: number = beforeLeft ? this.getOffsetToLeft() : this.getOffsetToRight();
+            offset = toBorder + (offset - toBorder) / this.settings.boundaryResistanceReduction;
         }
 
         return offset;
