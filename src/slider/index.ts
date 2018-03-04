@@ -59,8 +59,10 @@ export default class Slider {
     }
 
     public slideTo(index: number): void {
-        this.offset = (this.currentIndex - Math.floor(index)) * 100;
-        this.moveToNearestSlide();
+        if (index >= 0 && index < this.wrapper.children.length) {
+            this.offset = (this.currentIndex - Math.floor(index)) * 100;
+            this.moveToNearestSlide();
+        }
     }
 
     private addEventListeners(): void {
