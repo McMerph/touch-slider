@@ -136,12 +136,15 @@ export default class Slider {
     }
 
     private moveToNearestSlide(): void {
-        const excessDeltaThreshold: boolean = Math.abs(this.offset) > this.settings.deltaThreshold;
-        const excessTimeThreshold: boolean = performance.now() - this.startTime < this.settings.timeThresholdInMs;
+        const { deltaThreshold, timeThresholdInMs } = this.settings;
+        const excessDeltaThreshold: boolean = Math.abs(this.offset) > deltaThreshold;
+        const excessTimeThreshold: boolean = performance.now() - this.startTime < timeThresholdInMs;
+        const getRoundFunction: () => (x: number) => number = () =>
+            (excessTimeThreshold || Math.abs(this.offset % 100) > deltaThreshold) ? Math.ceil : Math.floor;
         this.offset = excessDeltaThreshold || excessTimeThreshold ? limit({
             max: this.getOffsetToLeft(),
             min: this.getOffsetToRight(),
-            value: Math.ceil(Math.abs(this.offset) / 100) * (this.offset > 0 ? 100 : -100),
+            value: getRoundFunction()(Math.abs(this.offset) / 100) * (this.offset > 0 ? 100 : -100),
         }) : 0;
         this.move();
         this.currentIndex -= this.offset / 100;
