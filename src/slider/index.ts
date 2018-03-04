@@ -136,20 +136,24 @@ export default class Slider {
     }
 
     private moveToNearestSlide(): void {
-        const { deltaThreshold, timeThresholdInMs } = this.settings;
-        const excessDeltaThreshold: boolean = Math.abs(this.offset) > deltaThreshold;
-        const excessTimeThreshold: boolean = performance.now() - this.startTime < timeThresholdInMs;
-        const getRoundFunction: () => (x: number) => number = () =>
-            (excessTimeThreshold || Math.abs(this.offset % 100) > deltaThreshold) ? Math.ceil : Math.floor;
-        this.offset = excessDeltaThreshold || excessTimeThreshold ? limit({
-            max: this.getOffsetToLeft(),
-            min: this.getOffsetToRight(),
-            value: getRoundFunction()(Math.abs(this.offset) / 100) * (this.offset > 0 ? 100 : -100),
-        }) : 0;
+        this.setOffsetToNearestSlide();
         this.move();
         this.currentIndex -= this.offset / 100;
         this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
         this.state = State.Positioning;
+    }
+
+    private setOffsetToNearestSlide(): void {
+        const { deltaThreshold, timeThresholdInMs } = this.settings;
+        const excessTimeThreshold: boolean = performance.now() - this.startTime < timeThresholdInMs;
+        const excessDeltaThreshold: boolean = Math.abs(this.offset % 100) > deltaThreshold;
+        const getRoundFunction: () => (x: number) => number = () =>
+            (excessTimeThreshold || excessDeltaThreshold) ? Math.ceil : Math.floor;
+        this.offset = limit({
+            max: this.getOffsetToLeft(),
+            min: this.getOffsetToRight(),
+            value: getRoundFunction()(Math.abs(this.offset) / 100) * (this.offset > 0 ? 100 : -100),
+        });
     }
 
     private move(): void {

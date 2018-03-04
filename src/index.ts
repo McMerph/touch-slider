@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const counter: () => () => number = () => {
     let index = 0;
-    return () => ++index;
+    return () => index++;
 };
 
 const getNextIndex: () => number = counter();
