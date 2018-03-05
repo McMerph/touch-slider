@@ -1,14 +1,6 @@
 import { limit } from "../utils/Utils";
 import CLASS_NAMES from "./ClassNames";
-
-interface ISettings {
-    deltaThreshold: number;
-    outOfBoundsResistance: number;
-    slidesPerView: number;
-    spaceBetween: number;
-    timeThresholdInMs: number;
-    transitionDurationInMs: number;
-}
+import ISettings from "./ISettings";
 
 enum State { Idle, TouchStarted, Swipe, Positioning }
 
@@ -44,9 +36,6 @@ export default class Slider {
         this.container.classList.add(CLASS_NAMES.BLOCK);
         this.container.appendChild(this.wrapper);
         this.addEventListeners();
-
-        // TODO Delete after test
-        (window as any).slider = this;
     }
 
     public appendSlide(slide: HTMLElement): void {
