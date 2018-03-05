@@ -7,6 +7,7 @@ interface ISettings {
     slidesPerView: number;
     spaceBetween: number;
     timeThresholdInMs: number;
+    transitionDurationInMs: number;
 }
 
 enum State { Idle, TouchStarted, Swipe, Positioning }
@@ -19,6 +20,7 @@ export default class Slider {
         slidesPerView: 1,
         spaceBetween: 0,
         timeThresholdInMs: 300,
+        transitionDurationInMs: 200,
     };
 
     private readonly container: HTMLElement;
@@ -160,7 +162,7 @@ export default class Slider {
 
     private moveToNearestSlide(): void {
         this.setOffsetToNearestSlide();
-        this.wrapper.style.transitionDuration = "200ms";
+        this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
         this.move();
         this.currentIndex -= this.offset / this.getSlideWidth();
         this.state = State.Positioning;
