@@ -2,8 +2,8 @@ import { limit } from "../utils/Utils";
 import CLASS_NAMES from "./ClassNames";
 
 interface ISettings {
-    boundaryResistanceReduction: number;
     deltaThreshold: number;
+    outOfBoundsResistance: number;
     slidesPerView: number;
     spaceBetween: number;
     timeThresholdInMs: number;
@@ -14,8 +14,8 @@ enum State { Idle, TouchStarted, Swipe, Positioning }
 export default class Slider {
 
     private static defaultSettings: ISettings = {
-        boundaryResistanceReduction: 5,
         deltaThreshold: 50,
+        outOfBoundsResistance: 5,
         slidesPerView: 1,
         spaceBetween: 0,
         timeThresholdInMs: 300,
@@ -143,7 +143,7 @@ export default class Slider {
         const afterRight: boolean = pulledSlideIndex > this.wrapper.children.length - 1;
         if (beforeLeft || afterRight) {
             const toBorder: number = beforeLeft ? this.getOffsetToLeft() : this.getOffsetToRight();
-            offset = toBorder + (offset - toBorder) / this.settings.boundaryResistanceReduction;
+            offset = toBorder + (offset - toBorder) / this.settings.outOfBoundsResistance;
         }
 
         return offset;
