@@ -4,6 +4,7 @@ import CLASS_NAMES from "./ClassNames";
 interface ISettings {
     boundaryResistanceReduction: number;
     deltaThreshold: number;
+    slidesPerView: number;
     timeThresholdInMs: number;
 }
 
@@ -14,6 +15,7 @@ export default class Slider {
     private static defaultSettings: ISettings = {
         boundaryResistanceReduction: 5,
         deltaThreshold: 50,
+        slidesPerView: 1,
         timeThresholdInMs: 300,
     };
 
@@ -41,12 +43,15 @@ export default class Slider {
 
     public appendSlide(slide: HTMLElement): void {
         slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
+        slide.style.width = `${100 / this.settings.slidesPerView}%`;
         this.wrapper.appendChild(slide);
     }
 
     public updateClassNames(): void {
-        for (let i = 0; i < this.container.children.length; i++) {
-            this.container.children.item(i).classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
+        for (let i = 0; i < this.wrapper.children.length; i++) {
+            const slide = this.wrapper.children.item(i) as HTMLElement;
+            slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
+            slide.style.width = `${100 / this.settings.slidesPerView}%`;
         }
     }
 
@@ -59,8 +64,13 @@ export default class Slider {
     }
 
     public slideTo(index: number): void {
-        if (index >= 0 && index < this.wrapper.children.length) {
-            this.offset = (this.currentIndex - Math.floor(index)) * 100;
+        const normalizedIndex = limit({
+            max: this.wrapper.children.length - this.settings.slidesPerView,
+            min: 0,
+            value: index,
+        });
+        if (normalizedIndex !== this.currentIndex) {
+            this.offset = (this.currentIndex - Math.floor(index)) * 100 / this.settings.slidesPerView;
             this.moveToNearestSlide();
         }
     }
@@ -83,7 +93,7 @@ export default class Slider {
                         this.state = State.Swipe;
                     }
                 } else if (this.state === State.Swipe) {
-                    this.offset = this.getOffset(event.changedTouches[0]);
+                    this.offset = this.generateOffset(event.changedTouches[0]);
                     this.move();
                 }
             }
@@ -113,12 +123,14 @@ export default class Slider {
             Math.abs(this.startTouch.pageY - touch.pageY);
     }
 
-    private getOffset(touch: Touch): number {
+    private generateOffset(touch: Touch): number {
         const pixelsDelta: number = touch.pageX - this.startTouch.pageX;
-        const indexDelta: number = pixelsDelta / this.container.clientWidth;
-        const pulledSlideIndex: number = Math.ceil(this.currentIndex - indexDelta) - (pixelsDelta > 0 ? 1 : 0);
+        const { slidesPerView } = this.settings;
+        const indexDelta: number = pixelsDelta / this.wrapper.clientWidth * slidesPerView;
+        const directionOffset: number | number = pixelsDelta > 0 ? slidesPerView : 0;
+        const pulledSlideIndex: number = this.currentIndex - Math.ceil(indexDelta) + slidesPerView - directionOffset;
 
-        let offset: number = indexDelta * 100;
+        let offset: number = pixelsDelta / this.wrapper.clientWidth * 100;
         const beforeLeft: boolean = pulledSlideIndex < 0;
         const afterRight: boolean = pulledSlideIndex > this.wrapper.children.length - 1;
         if (beforeLeft || afterRight) {
@@ -130,36 +142,50 @@ export default class Slider {
     }
 
     private getOffsetToLeft(): number {
-        return this.currentIndex * 100;
+        return this.currentIndex * 100 / this.settings.slidesPerView;
     }
 
     private getOffsetToRight(): number {
-        return (this.currentIndex + 1 - this.wrapper.children.length) * 100;
+        const { slidesPerView } = this.settings;
+        return (this.currentIndex + slidesPerView - this.wrapper.children.length) * 100 / slidesPerView;
     }
 
     private moveToNearestSlide(): void {
         this.setOffsetToNearestSlide();
         this.move();
-        this.currentIndex -= this.offset / 100;
+        const slideWidth: number = 100 / this.settings.slidesPerView;
+        this.currentIndex -= this.offset / slideWidth;
+
         this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
         this.state = State.Positioning;
     }
 
     private setOffsetToNearestSlide(): void {
         const { deltaThreshold, timeThresholdInMs } = this.settings;
-        const excessTimeThreshold: boolean = performance.now() - this.startTime < timeThresholdInMs;
-        const excessDeltaThreshold: boolean = Math.abs(this.offset % 100) > deltaThreshold;
-        const getRoundFunction: () => (x: number) => number = () =>
-            (excessTimeThreshold || excessDeltaThreshold) ? Math.ceil : Math.floor;
-        this.offset = limit({
-            max: this.getOffsetToLeft(),
-            min: this.getOffsetToRight(),
-            value: getRoundFunction()(Math.abs(this.offset) / 100) * (this.offset > 0 ? 100 : -100),
+        const slideWidth: number = 100 / this.settings.slidesPerView;
+
+        const slidesOffset: number = -this.offset / slideWidth;
+        const next: boolean = (slidesOffset - Math.floor(slidesOffset)) > (deltaThreshold / 100);
+        let integerSlidesOffset: number = next ? Math.floor(slidesOffset) + 1 : Math.floor(slidesOffset);
+
+        if (integerSlidesOffset === 0) {
+            const excessTimeThreshold: boolean = performance.now() - this.startTime < timeThresholdInMs;
+            if (excessTimeThreshold) {
+                integerSlidesOffset = (this.offset > 0) ? -1 : 1;
+            }
+        }
+
+        const desiredSlidesOffset: number = limit({
+            max: this.wrapper.children.length - this.settings.slidesPerView - this.currentIndex,
+            min: -this.currentIndex,
+            value: integerSlidesOffset,
         });
+        this.offset = desiredSlidesOffset * -slideWidth;
     }
 
     private move(): void {
-        this.wrapper.style.transform = `translate3d(${-this.currentIndex * 100 + this.offset}%, 0, 0`;
+        const slideWidth: number = 100 / this.settings.slidesPerView;
+        this.wrapper.style.transform = `translate3d(${-this.currentIndex * slideWidth + this.offset}%, 0, 0`;
     }
 
 }
