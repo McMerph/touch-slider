@@ -131,12 +131,12 @@ export default class Slider {
     }
 
     private generateOffset(touch: Touch): number {
-        const pixelsDelta: number = touch.pageX - this.startTouch.pageX;
         const { slidesPerView } = this.settings;
+
+        const pixelsDelta: number = touch.pageX - this.startTouch.pageX;
         const indexDelta: number = pixelsDelta / this.wrapper.clientWidth * slidesPerView;
         const directionOffset: number = pixelsDelta > 0 ? slidesPerView : 0;
         const pulledSlideIndex: number = this.currentIndex - Math.ceil(indexDelta) + slidesPerView - directionOffset;
-
         let offset: number = pixelsDelta / this.wrapper.clientWidth * 100;
         const beforeLeft: boolean = pulledSlideIndex < 0;
         const afterRight: boolean = pulledSlideIndex > this.wrapper.children.length - 1;
@@ -168,23 +168,19 @@ export default class Slider {
 
     private setOffsetToNearestSlide(): void {
         const { deltaThreshold, timeThresholdInMs } = this.settings;
-        const slidesOffset: number = -this.offset / this.getSlideWidth();
+
+        let slidesOffset: number = -this.offset / this.getSlideWidth();
         const next: boolean = (slidesOffset - Math.floor(slidesOffset)) > (deltaThreshold / 100);
         let integerSlidesOffset: number = next ? Math.floor(slidesOffset) + 1 : Math.floor(slidesOffset);
-
-        if (integerSlidesOffset === 0) {
-            const excessTimeThreshold: boolean = performance.now() - this.startTime < timeThresholdInMs;
-            if (excessTimeThreshold) {
-                integerSlidesOffset = (this.offset > 0) ? -1 : 1;
-            }
+        if (integerSlidesOffset === 0 && performance.now() - this.startTime < timeThresholdInMs) {
+            integerSlidesOffset = (this.offset > 0) ? -1 : 1;
         }
-
-        const desiredSlidesOffset: number = limit({
+        slidesOffset = limit({
             max: this.wrapper.children.length - this.settings.slidesPerView - this.currentIndex,
             min: -this.currentIndex,
             value: integerSlidesOffset,
         });
-        this.offset = desiredSlidesOffset * -this.getSlideWidth();
+        this.offset = slidesOffset * -this.getSlideWidth();
     }
 
     private move(): void {
