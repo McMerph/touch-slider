@@ -1,5 +1,4 @@
 const ELEMENT_PREFIX = "__";
-const MODIFIER_PREFIX = "_";
 const BLOCK: string = "slider";
 const ELEMENTS = {
     SLIDE: `${BLOCK}${ELEMENT_PREFIX}slide`,
@@ -11,9 +10,6 @@ const CLASS_NAMES = {
     ELEMENTS: {
         SLIDE: ELEMENTS.SLIDE,
         WRAPPER: ELEMENTS.WRAPPER,
-    },
-    MODIFIERS: {
-        ANIMATING: `${BLOCK}${MODIFIER_PREFIX}animating`,
     },
 };
 

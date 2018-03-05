@@ -108,18 +108,18 @@ export default class Slider {
         this.container.addEventListener("touchcancel", handleTouchEnd);
 
         this.container.addEventListener("transitionend", () => {
-            this.wrapper.classList.remove(CLASS_NAMES.MODIFIERS.ANIMATING);
+            this.wrapper.style.transitionDuration = null;
             this.state = State.Idle;
         });
     }
 
     private updateSlide(slide: HTMLElement): void {
         slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
-        slide.style.width = `${this.getSlideWidth()}%`;
+        slide.style.width = `${this.getSlideWidth()}px`;
     }
 
     private getSlideWidth(): number {
-        return 100 / this.settings.slidesPerView;
+        return this.wrapper.clientWidth / this.settings.slidesPerView;
     }
 
     /**
@@ -138,7 +138,7 @@ export default class Slider {
         const indexDelta: number = pixelsDelta / this.wrapper.clientWidth * slidesPerView;
         const directionOffset: number = pixelsDelta > 0 ? slidesPerView : 0;
         const pulledSlideIndex: number = this.currentIndex - Math.ceil(indexDelta) + slidesPerView - directionOffset;
-        let offset: number = pixelsDelta / this.wrapper.clientWidth * 100;
+        let offset: number = pixelsDelta;
         const beforeLeft: boolean = pulledSlideIndex < 0;
         const afterRight: boolean = pulledSlideIndex > this.wrapper.children.length - 1;
         if (beforeLeft || afterRight) {
@@ -160,10 +160,9 @@ export default class Slider {
 
     private moveToNearestSlide(): void {
         this.setOffsetToNearestSlide();
+        this.wrapper.style.transitionDuration = "200ms";
         this.move();
         this.currentIndex -= this.offset / this.getSlideWidth();
-
-        this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
         this.state = State.Positioning;
     }
 
@@ -186,7 +185,7 @@ export default class Slider {
 
     private move(): void {
         const moveX: number = -this.currentIndex * this.getSlideWidth() + this.offset;
-        this.wrapper.style.transform = `translate3d(${moveX}%, 0, 0`;
+        this.wrapper.style.transform = `translate3d(${moveX}px, 0, 0`;
     }
 
 }

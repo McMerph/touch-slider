@@ -10,7 +10,3 @@
 .slider__slide {
   flex-shrink: 0;
 }
-
-.slider_animating {
-  transition: transform 200ms linear;
-}
