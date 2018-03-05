@@ -43,7 +43,7 @@ export default class Slider {
 
     public appendSlide(slide: HTMLElement): void {
         slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
-        slide.style.width = `${100 / this.settings.slidesPerView}%`;
+        slide.style.width = `${this.getSlideWidth()}%`;
         this.wrapper.appendChild(slide);
     }
 
@@ -51,7 +51,7 @@ export default class Slider {
         for (let i = 0; i < this.wrapper.children.length; i++) {
             const slide = this.wrapper.children.item(i) as HTMLElement;
             slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
-            slide.style.width = `${100 / this.settings.slidesPerView}%`;
+            slide.style.width = `${this.getSlideWidth()}%`;
         }
     }
 
@@ -70,7 +70,7 @@ export default class Slider {
             value: index,
         });
         if (normalizedIndex !== this.currentIndex) {
-            this.offset = (this.currentIndex - Math.floor(index)) * 100 / this.settings.slidesPerView;
+            this.offset = (this.currentIndex - Math.floor(index)) * this.getSlideWidth();
             this.moveToNearestSlide();
         }
     }
@@ -114,6 +114,10 @@ export default class Slider {
         });
     }
 
+    private getSlideWidth(): number {
+        return 100 / this.settings.slidesPerView;
+    }
+
     /**
      * If horizontal offset greater than vertical then it is swipe
      * @param {Touch} touch - touch to check
@@ -142,19 +146,18 @@ export default class Slider {
     }
 
     private getOffsetToLeft(): number {
-        return this.currentIndex * 100 / this.settings.slidesPerView;
+        return this.currentIndex * this.getSlideWidth();
     }
 
     private getOffsetToRight(): number {
         const { slidesPerView } = this.settings;
-        return (this.currentIndex + slidesPerView - this.wrapper.children.length) * 100 / slidesPerView;
+        return (this.currentIndex + slidesPerView - this.wrapper.children.length) * this.getSlideWidth();
     }
 
     private moveToNearestSlide(): void {
         this.setOffsetToNearestSlide();
         this.move();
-        const slideWidth: number = 100 / this.settings.slidesPerView;
-        this.currentIndex -= this.offset / slideWidth;
+        this.currentIndex -= this.offset / this.getSlideWidth();
 
         this.wrapper.classList.add(CLASS_NAMES.MODIFIERS.ANIMATING);
         this.state = State.Positioning;
@@ -162,9 +165,7 @@ export default class Slider {
 
     private setOffsetToNearestSlide(): void {
         const { deltaThreshold, timeThresholdInMs } = this.settings;
-        const slideWidth: number = 100 / this.settings.slidesPerView;
-
-        const slidesOffset: number = -this.offset / slideWidth;
+        const slidesOffset: number = -this.offset / this.getSlideWidth();
         const next: boolean = (slidesOffset - Math.floor(slidesOffset)) > (deltaThreshold / 100);
         let integerSlidesOffset: number = next ? Math.floor(slidesOffset) + 1 : Math.floor(slidesOffset);
 
@@ -180,12 +181,12 @@ export default class Slider {
             min: -this.currentIndex,
             value: integerSlidesOffset,
         });
-        this.offset = desiredSlidesOffset * -slideWidth;
+        this.offset = desiredSlidesOffset * -this.getSlideWidth();
     }
 
     private move(): void {
-        const slideWidth: number = 100 / this.settings.slidesPerView;
-        this.wrapper.style.transform = `translate3d(${-this.currentIndex * slideWidth + this.offset}%, 0, 0`;
+        const moveX: number = -this.currentIndex * this.getSlideWidth() + this.offset;
+        this.wrapper.style.transform = `translate3d(${moveX}%, 0, 0`;
     }
 
 }
