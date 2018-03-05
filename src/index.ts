@@ -7,7 +7,10 @@ import Slider from "./slider/index";
 
 document.addEventListener("DOMContentLoaded", () => {
     const touchTestElement: HTMLElement = document.querySelector(".touch-test") as HTMLElement;
-    const slider: Slider = new Slider(touchTestElement, { slidesPerView: 2 });
+    const slider: Slider = new Slider(touchTestElement, {
+        slidesPerView: 2,
+        spaceBetween: 10,
+    });
     slider.appendSlide(getDiv("red"));
     slider.appendSlide(getDiv("green"));
     slider.appendSlide(getDiv("blue"));

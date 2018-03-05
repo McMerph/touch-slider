@@ -5,6 +5,7 @@ interface ISettings {
     boundaryResistanceReduction: number;
     deltaThreshold: number;
     slidesPerView: number;
+    spaceBetween: number;
     timeThresholdInMs: number;
 }
 
@@ -16,6 +17,7 @@ export default class Slider {
         boundaryResistanceReduction: 5,
         deltaThreshold: 50,
         slidesPerView: 1,
+        spaceBetween: 0,
         timeThresholdInMs: 300,
     };
 
@@ -48,8 +50,7 @@ export default class Slider {
 
     public updateClassNames(): void {
         for (let i = 0; i < this.wrapper.children.length; i++) {
-            const slide = this.wrapper.children.item(i) as HTMLElement;
-            this.updateSlide(slide);
+            this.updateSlide(this.wrapper.children.item(i) as HTMLElement);
         }
     }
 
