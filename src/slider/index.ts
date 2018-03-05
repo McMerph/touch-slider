@@ -42,16 +42,14 @@ export default class Slider {
     }
 
     public appendSlide(slide: HTMLElement): void {
-        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
-        slide.style.width = `${this.getSlideWidth()}%`;
+        this.updateSlide(slide);
         this.wrapper.appendChild(slide);
     }
 
     public updateClassNames(): void {
         for (let i = 0; i < this.wrapper.children.length; i++) {
             const slide = this.wrapper.children.item(i) as HTMLElement;
-            slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
-            slide.style.width = `${this.getSlideWidth()}%`;
+            this.updateSlide(slide);
         }
     }
 
@@ -114,6 +112,11 @@ export default class Slider {
         });
     }
 
+    private updateSlide(slide: HTMLElement): void {
+        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
+        slide.style.width = `${this.getSlideWidth()}%`;
+    }
+
     private getSlideWidth(): number {
         return 100 / this.settings.slidesPerView;
     }
@@ -131,7 +134,7 @@ export default class Slider {
         const pixelsDelta: number = touch.pageX - this.startTouch.pageX;
         const { slidesPerView } = this.settings;
         const indexDelta: number = pixelsDelta / this.wrapper.clientWidth * slidesPerView;
-        const directionOffset: number | number = pixelsDelta > 0 ? slidesPerView : 0;
+        const directionOffset: number = pixelsDelta > 0 ? slidesPerView : 0;
         const pulledSlideIndex: number = this.currentIndex - Math.ceil(indexDelta) + slidesPerView - directionOffset;
 
         let offset: number = pixelsDelta / this.wrapper.clientWidth * 100;
