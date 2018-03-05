@@ -32,33 +32,33 @@ export default class Slider {
     private offset: number;
     private startTouch: Touch;
     private startTime: number;
+    private slidesPerView: number;
 
     public constructor(container: HTMLElement, settings?: Partial<ISettings>) {
         this.container = container;
         this.settings = { ...Slider.defaultSettings, ...settings };
+        this.slidesPerView = this.settings.slidesPerView;
 
         this.wrapper = document.createElement("div");
         this.wrapper.classList.add(CLASS_NAMES.ELEMENTS.WRAPPER);
         this.container.classList.add(CLASS_NAMES.BLOCK);
         this.container.appendChild(this.wrapper);
         this.addEventListeners();
-        this.updateClassNames();
 
         // TODO Delete after test
         (window as any).slider = this;
     }
 
     public appendSlide(slide: HTMLElement): void {
-        this.updateSlide(slide);
+        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
         this.wrapper.appendChild(slide);
-        for (let i = 0; i < this.wrapper.children.length - 1; i++) {
-            (this.wrapper.children.item(i) as HTMLElement).style.marginRight = `${this.settings.spaceBetween}px`;
-        }
-    }
-
-    public updateClassNames(): void {
+        this.slidesPerView = Math.min(this.settings.slidesPerView, this.wrapper.children.length);
         for (let i = 0; i < this.wrapper.children.length; i++) {
-            this.updateSlide(this.wrapper.children.item(i) as HTMLElement);
+            const wrapperSlide = this.wrapper.children.item(i) as HTMLElement;
+            if (i < this.wrapper.children.length - 1) {
+                wrapperSlide.style.marginRight = `${this.settings.spaceBetween}px`;
+            }
+            wrapperSlide.style.width = `${this.getSlideWidth()}px`;
         }
     }
 
@@ -80,7 +80,7 @@ export default class Slider {
 
     private getNormalizedIndex(index: number): number {
         return limit({
-            max: this.wrapper.children.length - this.settings.slidesPerView,
+            max: this.wrapper.children.length - this.slidesPerView,
             min: 0,
             value: index,
         });
@@ -126,14 +126,9 @@ export default class Slider {
         });
     }
 
-    private updateSlide(slide: HTMLElement): void {
-        slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
-        slide.style.width = `${this.getSlideWidth()}px`;
-    }
-
     private getSlideWidth(): number {
-        const { slidesPerView, spaceBetween } = this.settings;
-        return (this.wrapper.clientWidth - (slidesPerView - 1) * spaceBetween) / slidesPerView;
+        const { spaceBetween } = this.settings;
+        return (this.wrapper.clientWidth - (this.slidesPerView - 1) * spaceBetween) / this.slidesPerView;
     }
 
     /**
@@ -146,12 +141,12 @@ export default class Slider {
     }
 
     private generateOffset(touch: Touch): number {
-        const { slidesPerView } = this.settings;
+        const { currentIndex, slidesPerView } = this;
 
         const pixelsDelta: number = touch.pageX - this.startTouch.pageX;
         const indexDelta: number = pixelsDelta / this.wrapper.clientWidth * slidesPerView;
         const directionOffset: number = pixelsDelta > 0 ? slidesPerView : 0;
-        const pulledSlideIndex: number = this.currentIndex - Math.ceil(indexDelta) + slidesPerView - directionOffset;
+        const pulledSlideIndex: number = currentIndex - Math.ceil(indexDelta) + slidesPerView - directionOffset;
         let offset: number = pixelsDelta;
         const beforeLeft: boolean = pulledSlideIndex < 0;
         const afterRight: boolean = pulledSlideIndex > this.wrapper.children.length - 1;
@@ -168,11 +163,12 @@ export default class Slider {
     }
 
     private getOffsetToRight(): number {
-        const { slidesPerView, spaceBetween } = this.settings;
+        const { spaceBetween } = this.settings;
+
         const slideWidth: number = this.getSlideWidth();
         const slidesCount: number = this.wrapper.children.length;
-        const slidesOffsetToRight: number = (this.currentIndex + slidesPerView - slidesCount) * slideWidth;
-        const marginsOffsetToRight: number = (slidesCount - this.currentIndex - slidesPerView) * spaceBetween;
+        const slidesOffsetToRight: number = (this.currentIndex + this.slidesPerView - slidesCount) * slideWidth;
+        const marginsOffsetToRight: number = (slidesCount - this.currentIndex - this.slidesPerView) * spaceBetween;
 
         return slidesOffsetToRight - marginsOffsetToRight;
     }
