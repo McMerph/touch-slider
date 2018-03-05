@@ -163,15 +163,22 @@ export default class Slider {
     }
 
     private moveToNearestSlide(): void {
-        const slidesOffset: number = this.setOffsetToNearestSlide();
+        const { spaceBetween } = this.settings;
+
+        const integerSlidesOffset: number = this.getIntegerSlidesOffset();
+        this.offset = limit({
+            max: this.getOffsetToLeft(),
+            min: this.getOffsetToRight(),
+            value: -integerSlidesOffset * (this.getSlideWidth() + spaceBetween),
+        });
         this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
         this.move();
-        this.currentIndex = this.getNormalizedIndex(this.currentIndex + slidesOffset);
+        this.currentIndex = this.getNormalizedIndex(this.currentIndex + integerSlidesOffset);
         this.state = State.Positioning;
     }
 
-    private setOffsetToNearestSlide(): number {
-        const { deltaThreshold, timeThresholdInMs, spaceBetween } = this.settings;
+    private getIntegerSlidesOffset(): number {
+        const { deltaThreshold, timeThresholdInMs } = this.settings;
 
         const slidesOffset: number = -this.offset / this.getSlideWidth();
         const next: boolean = (slidesOffset - Math.floor(slidesOffset)) > (deltaThreshold / 100);
@@ -179,11 +186,6 @@ export default class Slider {
         if (integerSlidesOffset === 0 && performance.now() - this.startTime < timeThresholdInMs) {
             integerSlidesOffset = (this.offset > 0) ? -1 : 1;
         }
-        this.offset = limit({
-            max: this.getOffsetToLeft(),
-            min: this.getOffsetToRight(),
-            value: -integerSlidesOffset * (this.getSlideWidth() + spaceBetween),
-        });
 
         return integerSlidesOffset;
     }
