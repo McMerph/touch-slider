@@ -27,6 +27,7 @@
   "author": "Alexandr Sidorenko",
   "license": "ISC",
   "dependencies": {
+    "classlist-polyfill": "^1.2.0",
     "normalize.css": "^8.0.0"
   },
   "devDependencies": {
