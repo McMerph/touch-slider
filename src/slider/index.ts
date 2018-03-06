@@ -23,8 +23,8 @@ export default class Slider {
     private currentIndex: number = 0;
     private slidesPerView: number;
 
-    private offset: number;
-    private previousMove: number;
+    private currentSlideOffset: number;
+    private totalOffset: number;
     private startTouch: Touch;
     private startTime: number;
 
@@ -62,10 +62,10 @@ export default class Slider {
     }
 
     public slideTo(index: number): void {
-        this.previousMove = NaN;
+        this.totalOffset = NaN;
         const normalizedIndex = this.getNormalizedIndex(Math.floor(index));
         if (normalizedIndex !== this.currentIndex) {
-            this.offset = (this.currentIndex - normalizedIndex) * this.getSlideWidth();
+            this.currentSlideOffset = (this.currentIndex - normalizedIndex) * this.getSlideWidth();
             this.moveToNearestSlide();
         }
     }
@@ -96,7 +96,7 @@ export default class Slider {
                         this.state = State.Swipe;
                     }
                 } else if (this.state === State.Swipe) {
-                    this.offset = this.getTouchOffset(event.changedTouches[0]);
+                    this.currentSlideOffset = this.getTouchOffset(event.changedTouches[0]);
                     this.move();
                 }
             }
@@ -168,12 +168,12 @@ export default class Slider {
         const { spaceBetween } = this.settings;
 
         const integerSlidesOffset: number = this.getIntegerSlidesOffset();
-        this.offset = limit({
+        this.currentSlideOffset = limit({
             max: this.getOffsetToLeft(),
             min: this.getOffsetToRight(),
             value: -integerSlidesOffset * (this.getSlideWidth() + spaceBetween),
         });
-        if (this.previousMove !== this.offset) {
+        if (this.totalOffset !== this.currentSlideOffset) {
             this.move();
             this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
             this.state = State.Positioning;
@@ -186,11 +186,11 @@ export default class Slider {
     private getIntegerSlidesOffset(): number {
         const { deltaThreshold, timeThresholdInMs } = this.settings;
 
-        const slidesOffset: number = -this.offset / this.getSlideWidth();
+        const slidesOffset: number = -this.currentSlideOffset / this.getSlideWidth();
         const next: boolean = (slidesOffset - Math.floor(slidesOffset)) > (deltaThreshold / 100);
         let integerSlidesOffset: number = next ? Math.floor(slidesOffset) + 1 : Math.floor(slidesOffset);
         if (integerSlidesOffset === 0 && performance.now() - this.startTime < timeThresholdInMs) {
-            integerSlidesOffset = (this.offset > 0) ? -1 : 1;
+            integerSlidesOffset = (this.currentSlideOffset > 0) ? -1 : 1;
         }
 
         return integerSlidesOffset;
@@ -199,9 +199,8 @@ export default class Slider {
     private move(): void {
         const { spaceBetween } = this.settings;
         const slideWidth: number = this.getSlideWidth();
-        const moveX: number = -this.currentIndex * (slideWidth + spaceBetween) + this.offset;
-        this.previousMove = moveX;
-        this.wrapper.style.transform = `translate3d(${moveX}px, 0, 0`;
+        this.totalOffset = -this.currentIndex * (slideWidth + spaceBetween) + this.currentSlideOffset;
+        this.wrapper.style.transform = `translate3d(${this.totalOffset}px, 0, 0`;
     }
 
 }
