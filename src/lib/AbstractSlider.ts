@@ -1,4 +1,4 @@
-import { limit } from "../utils/Utils";
+import { limit } from "./Utils";
 import CLASS_NAMES from "./ClassNames";
 import ISettings from "./ISettings";
 

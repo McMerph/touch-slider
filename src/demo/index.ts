@@ -1,12 +1,12 @@
 import "classlist-polyfill";
-
 import "normalize.css/normalize.css";
 
 import "./index.css";
-import "./slider/index.css";
 
-import HorizontalSlider from "./slider/HorizontalSlider";
-import VerticalSlider from "./slider/VerticalSlider";
+import "../lib/index.css";
+
+import HorizontalSlider from "../lib/HorizontalSlider";
+import VerticalSlider from "../lib/VerticalSlider";
 
 const handleHorizontalSlider: () => void = () => {
     const getNextIndex: () => number = counter();

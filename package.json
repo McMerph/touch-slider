@@ -1,10 +1,11 @@
 {
+  "private": true,
   "name": "touch-slider",
   "version": "1.0.0",
   "description": "This is a web-based application of touch slider",
   "scripts": {
-    "start": "webpack-dev-server --open --config webpack.dev.js",
-    "build": "webpack --config webpack.prod.js",
+    "demo": "webpack-dev-server --open --config webpack.demo.js",
+    "lib": "webpack --config webpack.lib.js",
     "lint:css": "stylelint \"src/**/*.*css\""
   },
   "browserslist": [

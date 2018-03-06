@@ -5,12 +5,12 @@ const StyleLintPlugin = require('stylelint-webpack-plugin');
 
 module.exports = {
     entry: {
-        app: './src/index.ts'
+        app: './src/demo/index.ts'
     },
     plugins: [
         new CleanWebpackPlugin(['dist']),
         new HtmlWebpackPlugin({
-                template: './src/index.html'
+                template: './src/demo/index.html'
             }
         ),
         new StyleLintPlugin({
@@ -26,8 +26,10 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
-                    {loader: 'style-loader'},// adds CSS to the DOM by injecting a <style> tag
-                    {loader: 'css-loader'} // interprets @import and url() like import/require() and will resolve them
+                    // adds CSS to the DOM by injecting a <style> tag
+                    {loader: 'style-loader'},
+                    // interprets @import and url() like import/require() and will resolve them
+                    {loader: 'css-loader'}
                 ]
             },
             {
