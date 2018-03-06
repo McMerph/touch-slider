@@ -6,8 +6,8 @@
   "main": "dist/slider.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "build": "webpack --config webpack.lib.js",
     "demo": "webpack-dev-server --open --config webpack.demo.js",
-    "lib": "webpack --config webpack.lib.js",
     "lint:css": "stylelint \"src/**/*.*css\""
   },
   "browserslist": [

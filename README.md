@@ -1,7 +1,29 @@
 # Touch slider
-This is a web-based application of touch slider
+Touch slider - is a touch slider with hardware accelerated transitions. It is intended to be used in websites.
 
-## Getting Started
+## Usage
+Add repo of this project to 'dependences' in package.json of your project.
+
+    // package.json
+    "dependencies": {
+        ...
+        "touch-slider": "git+https://github.com/McMerph/touch-slider.git",
+        ...
+    }
+    
+Install library via `npm i`
+
+If you want to be up-to-date you should edit package.json of your project like this ([npm issue](https://github.com/npm/npm/issues/1727))
+    
+    // package.json
+    "scripts": {
+        ...
+        "postinstall": "npm update && npm install git+https://github.com/McMerph/touch-slider.git",
+        ...
+      }
+
+
+## Development
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ### Prerequisites
@@ -14,22 +36,19 @@ Install required packages from npm
     
     npm i
     
-### Development
+### Demo
 
-To run development server
+To run demo
 
-    npm start
+    npm run demo
     
-App is available in browser at  
-* [http://localhost:8080](http://localhost:8080)
-* [http://127.0.0.1:8080](http://127.0.0.1:8080)
-* [http://<your.ip>:8080](http://<your.ip>:8080)
-
+### Build
     
-### Deployment
-1. Build (`npm run build`)
-2. Copy 'dist' directory to server
- 
+To build
+
+    npm run build
+        
+
 ## Built With
 * [Node.js](https://nodejs.org/en/) - JavaScript runtime
 * [TypeScript](https://www.typescriptlang.org/) - Typed superset of JavaScript that compiles to plain JavaScript
