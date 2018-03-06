@@ -113,8 +113,13 @@ export default class Slider {
                         this.state = State.Swipe;
                     }
                 } else if (this.state === State.Swipe) {
-                    this.currentSlideOffset = this.getTouchOffset(event.changedTouches[0]);
-                    this.move();
+                    if (this.settings.orientation === Orientation.Horizontal) {
+                        this.currentSlideOffset = this.getTouchXOffset(event.changedTouches[0]);
+                        this.moveX();
+                    } else {
+                        this.currentSlideOffset = this.getTouchYOffset(event.changedTouches[0]);
+                        this.moveY();
+                    }
                 }
             }
         });
@@ -164,7 +169,7 @@ export default class Slider {
             Math.abs(this.startTouch.pageY - touch.pageY);
     }
 
-    private getTouchOffset(touch: Touch): number {
+    private getTouchXOffset(touch: Touch): number {
         const { currentIndex, slidesPerView } = this;
 
         const pixelsDelta: number = touch.pageX - this.startTouch.pageX;
@@ -182,8 +187,30 @@ export default class Slider {
         return offset;
     }
 
+    private getTouchYOffset(touch: Touch): number {
+        const { currentIndex, slidesPerView } = this;
+
+        const pixelsDelta: number = touch.pageY - this.startTouch.pageY;
+        const indexDelta: number = pixelsDelta / this.wrapper.clientHeight * slidesPerView;
+        const directionOffset: number = pixelsDelta > 0 ? slidesPerView : 0;
+        const pulledSlideIndex: number = currentIndex - Math.ceil(indexDelta) + slidesPerView - directionOffset;
+        let offset: number = pixelsDelta;
+        const beforeLeft: boolean = pulledSlideIndex < 0;
+        const afterRight: boolean = pulledSlideIndex > this.wrapper.children.length - 1;
+        if (beforeLeft || afterRight) {
+            const toBorder: number = beforeLeft ? this.getOffsetToTop() : this.getOffsetToBottom();
+            offset = toBorder + (offset - toBorder) / this.settings.outOfBoundsResistance;
+        }
+
+        return offset;
+    }
+
     private getOffsetToLeft(): number {
         return this.currentIndex * (this.getSlideWidth() + this.settings.spaceBetween);
+    }
+
+    private getOffsetToTop(): number {
+        return this.currentIndex * (this.getSlideHeight() + this.settings.spaceBetween);
     }
 
     private getOffsetToRight(): number {
@@ -197,6 +224,17 @@ export default class Slider {
         return slidesOffsetToRight - marginsOffsetToRight;
     }
 
+    private getOffsetToBottom(): number {
+        const { spaceBetween } = this.settings;
+
+        const slideHeight: number = this.getSlideHeight();
+        const slidesCount: number = this.wrapper.children.length;
+        const slidesOffsetToBottom: number = (this.currentIndex + this.slidesPerView - slidesCount) * slideHeight;
+        const marginsOffsetToBottom: number = (slidesCount - this.currentIndex - this.slidesPerView) * spaceBetween;
+
+        return slidesOffsetToBottom - marginsOffsetToBottom;
+    }
+
     private moveToNearestSlide(): void {
         const { spaceBetween } = this.settings;
 
@@ -207,7 +245,7 @@ export default class Slider {
             value: -integerSlidesOffset * (this.getSlideWidth() + spaceBetween),
         });
         if (this.totalOffset % this.currentSlideOffset !== 0) {
-            this.move();
+            this.moveX();
             this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
             this.state = State.Positioning;
         } else {
@@ -229,11 +267,18 @@ export default class Slider {
         return integerSlidesOffset;
     }
 
-    private move(): void {
+    private moveX(): void {
         const { spaceBetween } = this.settings;
         const slideWidth: number = this.getSlideWidth();
         this.totalOffset = -this.currentIndex * (slideWidth + spaceBetween) + this.currentSlideOffset;
         this.wrapper.style.transform = `translate3d(${this.totalOffset}px, 0, 0`;
+    }
+
+    private moveY(): void {
+        const { spaceBetween } = this.settings;
+        const slideHeight: number = this.getSlideHeight();
+        this.totalOffset = -this.currentIndex * (slideHeight + spaceBetween) + this.currentSlideOffset;
+        this.wrapper.style.transform = `translate3d(0, ${this.totalOffset}px, 0`;
     }
 
 }
