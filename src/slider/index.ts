@@ -79,7 +79,7 @@ export default class Slider {
         const normalizedIndex = this.getNormalizedIndex(Math.floor(index));
         if (normalizedIndex !== this.currentIndex) {
             this.currentSlideOffset = (this.currentIndex - normalizedIndex) * this.getSlideWidth();
-            this.moveToNearestSlide();
+            this.moveToNearestXSlide();
         }
     }
 
@@ -127,7 +127,11 @@ export default class Slider {
         const handleTouchEnd: (event: TouchEvent) => void = (event) => {
             if (this.state === State.Swipe) {
                 event.preventDefault();
-                this.moveToNearestSlide();
+                if (this.settings.orientation === Orientation.Horizontal) {
+                    this.moveToNearestXSlide();
+                } else {
+                    this.moveToNearestYSlide();
+                }
             }
         };
         this.container.addEventListener("touchend", handleTouchEnd);
@@ -235,10 +239,10 @@ export default class Slider {
         return slidesOffsetToBottom - marginsOffsetToBottom;
     }
 
-    private moveToNearestSlide(): void {
+    private moveToNearestXSlide(): void {
         const { spaceBetween } = this.settings;
 
-        const integerSlidesOffset: number = this.getIntegerSlidesOffset();
+        const integerSlidesOffset: number = this.getIntegerSlidesXOffset();
         this.currentSlideOffset = limit({
             max: this.getOffsetToLeft(),
             min: this.getOffsetToRight(),
@@ -254,10 +258,42 @@ export default class Slider {
         this.currentIndex = this.getNormalizedIndex(this.currentIndex + integerSlidesOffset);
     }
 
-    private getIntegerSlidesOffset(): number {
+    private moveToNearestYSlide(): void {
+        const { spaceBetween } = this.settings;
+
+        const integerSlidesOffset: number = this.getIntegerSlidesYOffset();
+        this.currentSlideOffset = limit({
+            max: this.getOffsetToTop(),
+            min: this.getOffsetToBottom(),
+            value: -integerSlidesOffset * (this.getSlideHeight() + spaceBetween),
+        });
+        if (this.totalOffset % this.currentSlideOffset !== 0) {
+            this.moveY();
+            this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
+            this.state = State.Positioning;
+        } else {
+            this.state = State.Idle;
+        }
+        this.currentIndex = this.getNormalizedIndex(this.currentIndex + integerSlidesOffset);
+    }
+
+    private getIntegerSlidesXOffset(): number {
         const { deltaThreshold, timeThresholdInMs } = this.settings;
 
         const slidesOffset: number = -this.currentSlideOffset / this.getSlideWidth();
+        const next: boolean = (slidesOffset - Math.floor(slidesOffset)) > (deltaThreshold / 100);
+        let integerSlidesOffset: number = next ? Math.floor(slidesOffset) + 1 : Math.floor(slidesOffset);
+        if (integerSlidesOffset === 0 && performance.now() - this.startTime < timeThresholdInMs) {
+            integerSlidesOffset = (this.currentSlideOffset > 0) ? -1 : 1;
+        }
+
+        return integerSlidesOffset;
+    }
+
+    private getIntegerSlidesYOffset(): number {
+        const { deltaThreshold, timeThresholdInMs } = this.settings;
+
+        const slidesOffset: number = -this.currentSlideOffset / this.getSlideHeight();
         const next: boolean = (slidesOffset - Math.floor(slidesOffset)) > (deltaThreshold / 100);
         let integerSlidesOffset: number = next ? Math.floor(slidesOffset) + 1 : Math.floor(slidesOffset);
         if (integerSlidesOffset === 0 && performance.now() - this.startTime < timeThresholdInMs) {
