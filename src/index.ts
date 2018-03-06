@@ -46,7 +46,7 @@ const handleVerticalSlider: () => void = () => {
     const touchTestElement: HTMLElement = document.querySelector(".vertical-test") as HTMLElement;
     const slider: Slider = new Slider(touchTestElement, {
         orientation: Orientation.Vertical,
-        slidesPerView: 2,
+        slidesPerView: 3,
         spaceBetween: 10,
     });
     slider.appendSlide(getDiv("red", getNextIndex));

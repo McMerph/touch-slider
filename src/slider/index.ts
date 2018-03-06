@@ -78,8 +78,13 @@ export default class Slider {
         this.totalOffset = NaN;
         const normalizedIndex = this.getNormalizedIndex(Math.floor(index));
         if (normalizedIndex !== this.currentIndex) {
-            this.currentSlideOffset = (this.currentIndex - normalizedIndex) * this.getSlideWidth();
-            this.moveToNearestXSlide();
+            if (this.settings.orientation === Orientation.Horizontal) {
+                this.currentSlideOffset = (this.currentIndex - normalizedIndex) * this.getSlideWidth();
+                this.moveToNearestXSlide();
+            } else {
+                this.currentSlideOffset = (this.currentIndex - normalizedIndex) * this.getSlideHeight();
+                this.moveToNearestYSlide();
+            }
         }
     }
 
