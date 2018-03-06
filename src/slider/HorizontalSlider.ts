@@ -10,9 +10,8 @@ export default class HorizontalSlider extends AbstractSlider {
         slide.style.marginRight = `${this.settings.spaceBetween}px`;
     }
 
-    protected getSlideSize(): number {
-        const { spaceBetween } = this.settings;
-        return (this.wrapper.clientWidth - (this.slidesPerView - 1) * spaceBetween) / this.slidesPerView;
+    protected getWrapperSize(): number {
+        return this.wrapper.clientWidth;
     }
 
     protected isSwipe(touch: Touch): boolean {
@@ -24,8 +23,8 @@ export default class HorizontalSlider extends AbstractSlider {
         return touch.pageX - this.startTouch.pageX;
     }
 
-    protected translate(): void {
-        this.wrapper.style.transform = `translate3d(${this.totalOffset}px, 0, 0`;
+    protected getTranslate3dParameters(): string {
+        return `${this.totalOffset}px, 0, 0`;
     }
 
 }

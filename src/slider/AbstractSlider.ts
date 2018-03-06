@@ -74,16 +74,21 @@ export default abstract class AbstractSlider {
 
     protected abstract setSlideMargin(slide: HTMLElement): void;
 
-    protected abstract getSlideSize(): number;
+    protected abstract getWrapperSize(): number;
 
     protected abstract isSwipe(touch: Touch): boolean;
 
     protected abstract getPixelsDelta(touch: Touch): number;
 
-    protected abstract translate(): void;
+    protected abstract getTranslate3dParameters(): string;
 
     protected getWrapperClassNames(): string[] {
         return [];
+    }
+
+    protected getSlideSize(): number {
+        const { spaceBetween } = this.settings;
+        return (this.getWrapperSize() - (this.slidesPerView - 1) * spaceBetween) / this.slidesPerView;
     }
 
     private getNormalizedIndex(index: number): number {
@@ -200,10 +205,10 @@ export default abstract class AbstractSlider {
 
     private move(): void {
         const { spaceBetween } = this.settings;
+        const { currentIndex, currentSlideOffset } = this;
 
-        const slideSize: number = this.getSlideSize();
-        this.totalOffset = -this.currentIndex * (slideSize + spaceBetween) + this.currentSlideOffset;
-        this.translate();
+        this.totalOffset = -currentIndex * (this.getSlideSize() + spaceBetween) + currentSlideOffset;
+        this.wrapper.style.transform = `translate3d(${this.getTranslate3dParameters()})`;
     }
 
 }

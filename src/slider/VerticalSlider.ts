@@ -15,9 +15,8 @@ export default class VerticalSlider extends AbstractSlider {
         slide.style.marginBottom = `${this.settings.spaceBetween}px`;
     }
 
-    protected getSlideSize(): number {
-        const { spaceBetween } = this.settings;
-        return (this.wrapper.clientHeight - (this.slidesPerView - 1) * spaceBetween) / this.slidesPerView;
+    protected getWrapperSize(): number {
+        return this.wrapper.clientHeight;
     }
 
     protected isSwipe(touch: Touch): boolean {
@@ -29,8 +28,8 @@ export default class VerticalSlider extends AbstractSlider {
         return touch.pageY - this.startTouch.pageY;
     }
 
-    protected translate(): void {
-        this.wrapper.style.transform = `translate3d(0, ${this.totalOffset}px,  0`;
+    protected getTranslate3dParameters(): string {
+        return `0, ${this.totalOffset}px, 0`;
     }
 
 }
