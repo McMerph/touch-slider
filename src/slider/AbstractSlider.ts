@@ -1,12 +1,12 @@
 import { limit } from "../utils/Utils";
 import CLASS_NAMES from "./ClassNames";
-import IAbstractSliderSettings from "./IAbstractSliderSettings";
+import ISettings from "./ISettings";
 
 enum State { Idle, TouchStarted, Swipe, Positioning }
 
 export default abstract class AbstractSlider {
 
-    private static defaultSettings: IAbstractSliderSettings = {
+    private static defaultSettings: ISettings = {
         deltaThreshold: 50,
         outOfBoundsResistance: 5,
         slidesPerView: 1,
@@ -16,7 +16,7 @@ export default abstract class AbstractSlider {
     };
 
     protected readonly wrapper: HTMLElement;
-    protected readonly settings: IAbstractSliderSettings;
+    protected readonly settings: ISettings;
 
     private state: State = State.Idle;
     private currentIndex: number = 0;
@@ -27,7 +27,7 @@ export default abstract class AbstractSlider {
     private startTime: number;
     protected startTouch: Touch;
 
-    public constructor(container: HTMLElement, settings?: Partial<IAbstractSliderSettings>) {
+    public constructor(container: HTMLElement, settings?: Partial<ISettings>) {
         this.wrapper = document.createElement("div");
         this.settings = { ...AbstractSlider.defaultSettings, ...settings };
         this.slidesPerView = this.settings.slidesPerView;
