@@ -1,0 +1,16 @@
+.slider {
+  overflow: hidden;
+}
+
+.slider__wrapper {
+  display: flex;
+  height: 100%;
+}
+
+.slider__wrapper_vertical {
+  flex-direction: column;
+}
+
+.slider__slide {
+  flex-shrink: 0;
+}
