@@ -30,10 +30,16 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", (event: Event) => {
         event.preventDefault();
         const input: HTMLInputElement = document.querySelector(".index") as HTMLInputElement;
-        const index: number = Number.parseInt(input.value);
-        slider.slideTo(index);
+        if (isNumeric(input.value)) {
+            const index: number = Number.parseInt(input.value);
+            slider.slideTo(index);
+        }
     });
 });
+
+function isNumeric(n: string): boolean {
+    return !isNaN(parseFloat(n)) && isFinite(Number.parseInt(n));
+}
 
 const counter: () => () => number = () => {
     let index = 0;
