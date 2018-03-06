@@ -6,8 +6,7 @@ import "./index.css";
 import "./slider/index.css";
 
 import HorizontalSlider from "./slider/HorizontalSlider";
-import Slider from "./slider/index";
-import Orientation from "./slider/Orientation";
+import VerticalSlider from "./slider/VerticalSlider";
 
 const handleHorizontalSlider: () => void = () => {
     const getNextIndex: () => number = counter();
@@ -45,8 +44,7 @@ const handleVerticalSlider: () => void = () => {
     const getNextIndex: () => number = counter();
 
     const touchTestElement: HTMLElement = document.querySelector(".vertical-test") as HTMLElement;
-    const slider: Slider = new Slider(touchTestElement, {
-        orientation: Orientation.Vertical,
+    const slider: VerticalSlider = new VerticalSlider(touchTestElement, {
         slidesPerView: 3,
         spaceBetween: 10,
     });

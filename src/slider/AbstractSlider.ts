@@ -15,7 +15,6 @@ export default abstract class AbstractSlider {
         transitionDurationInMs: 200,
     };
 
-    private readonly container: HTMLElement;
     protected readonly wrapper: HTMLElement;
     protected readonly settings: IAbstractSliderSettings;
 
@@ -29,7 +28,6 @@ export default abstract class AbstractSlider {
     protected startTouch: Touch;
 
     public constructor(container: HTMLElement, settings?: Partial<IAbstractSliderSettings>) {
-        this.container = container;
         this.wrapper = document.createElement("div");
         this.settings = { ...AbstractSlider.defaultSettings, ...settings };
         this.slidesPerView = this.settings.slidesPerView;
@@ -37,9 +35,9 @@ export default abstract class AbstractSlider {
         this.wrapper.classList.add(CLASS_NAMES.ELEMENTS.WRAPPER.NAME);
         this.wrapper.classList.add(...this.getWrapperClassNames());
 
-        this.container.classList.add(CLASS_NAMES.BLOCK);
-        this.container.appendChild(this.wrapper);
-        this.addEventListeners();
+        container.classList.add(CLASS_NAMES.BLOCK);
+        container.appendChild(this.wrapper);
+        this.addEventListeners(container);
     }
 
     public appendSlide(slide: HTMLElement): void {
@@ -72,9 +70,6 @@ export default abstract class AbstractSlider {
         }
     }
 
-    // TODO Makenot abstact?
-    protected abstract getWrapperClassNames(): string[];
-
     protected abstract setSlideSize(slide: HTMLElement): void;
 
     protected abstract setSlideMargin(slide: HTMLElement): void;
@@ -87,6 +82,10 @@ export default abstract class AbstractSlider {
 
     protected abstract translate(): void;
 
+    protected getWrapperClassNames(): string[] {
+        return [];
+    }
+
     private getNormalizedIndex(index: number): number {
         return limit({
             max: this.wrapper.children.length - this.slidesPerView,
@@ -95,8 +94,8 @@ export default abstract class AbstractSlider {
         });
     }
 
-    private addEventListeners(): void {
-        this.container.addEventListener("touchstart", (event) => {
+    private addEventListeners(container: HTMLElement): void {
+        container.addEventListener("touchstart", (event) => {
             if (event.touches.length === 1 && this.state === State.Idle) {
                 event.preventDefault();
                 this.startTouch = event.changedTouches[0];
@@ -105,7 +104,7 @@ export default abstract class AbstractSlider {
             }
         });
 
-        this.container.addEventListener("touchmove", (event) => {
+        container.addEventListener("touchmove", (event) => {
             if (event.touches.length === 1) {
                 event.preventDefault();
                 if (this.state === State.TouchStarted) {
@@ -125,10 +124,10 @@ export default abstract class AbstractSlider {
                 this.moveToNearestSlide();
             }
         };
-        this.container.addEventListener("touchend", handleTouchEnd);
-        this.container.addEventListener("touchcancel", handleTouchEnd);
+        container.addEventListener("touchend", handleTouchEnd);
+        container.addEventListener("touchcancel", handleTouchEnd);
 
-        this.container.addEventListener("transitionend", () => {
+        container.addEventListener("transitionend", () => {
             this.wrapper.style.transitionDuration = null;
             this.state = State.Idle;
         });

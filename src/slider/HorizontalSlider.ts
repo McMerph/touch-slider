@@ -2,10 +2,6 @@ import AbstractSlider from "./AbstractSlider";
 
 export default class HorizontalSlider extends AbstractSlider {
 
-    protected getWrapperClassNames(): string[] {
-        return [];
-    }
-
     protected setSlideSize(slide: HTMLElement): void {
         slide.style.width = `${this.getSlideSize()}px`;
     }
