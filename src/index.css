@@ -1,5 +1,9 @@
-.touch-test {
+.horizontal-test {
   height: 100px;
+}
+
+.vertical-test {
+  height: 300px;
 }
 
 .dummy {

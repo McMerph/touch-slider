@@ -1,6 +1,7 @@
 import { limit } from "../utils/Utils";
 import CLASS_NAMES from "./ClassNames";
 import ISettings from "./ISettings";
+import Orientation from "./Orientation";
 
 enum State { Idle, TouchStarted, Swipe, Positioning }
 
@@ -8,6 +9,7 @@ export default class Slider {
 
     private static defaultSettings: ISettings = {
         deltaThreshold: 50,
+        orientation: Orientation.Horizontal,
         outOfBoundsResistance: 5,
         slidesPerView: 1,
         spaceBetween: 0,
