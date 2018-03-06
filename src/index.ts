@@ -5,6 +5,7 @@ import "normalize.css/normalize.css";
 import "./index.css";
 import "./slider/index.css";
 
+import HorizontalSlider from "./slider/HorizontalSlider";
 import Slider from "./slider/index";
 import Orientation from "./slider/Orientation";
 
@@ -12,7 +13,7 @@ const handleHorizontalSlider: () => void = () => {
     const getNextIndex: () => number = counter();
 
     const touchTestElement: HTMLElement = document.querySelector(".horizontal-test") as HTMLElement;
-    const slider: Slider = new Slider(touchTestElement, {
+    const slider: HorizontalSlider = new HorizontalSlider(touchTestElement, {
         slidesPerView: 2,
         spaceBetween: 10,
     });
