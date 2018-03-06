@@ -36,7 +36,10 @@ export default class Slider {
         this.settings = { ...Slider.defaultSettings, ...settings };
         this.slidesPerView = this.settings.slidesPerView;
 
-        this.wrapper.classList.add(CLASS_NAMES.ELEMENTS.WRAPPER);
+        this.wrapper.classList.add(CLASS_NAMES.ELEMENTS.WRAPPER.NAME);
+        if (this.settings.orientation === Orientation.Vertical) {
+            this.wrapper.classList.add(CLASS_NAMES.ELEMENTS.WRAPPER.MODIFIERS.VERTICAL);
+        }
         this.container.classList.add(CLASS_NAMES.BLOCK);
         this.container.appendChild(this.wrapper);
         this.addEventListeners();
@@ -49,9 +52,17 @@ export default class Slider {
         for (let i = 0; i < this.wrapper.children.length; i++) {
             const wrapperSlide = this.wrapper.children.item(i) as HTMLElement;
             if (i < this.wrapper.children.length - 1) {
-                wrapperSlide.style.marginRight = `${this.settings.spaceBetween}px`;
+                if (this.settings.orientation === Orientation.Horizontal) {
+                    wrapperSlide.style.marginRight = `${this.settings.spaceBetween}px`;
+                } else {
+                    wrapperSlide.style.marginBottom = `${this.settings.spaceBetween}px`;
+                }
             }
-            wrapperSlide.style.width = `${this.getSlideWidth()}px`;
+            if (this.settings.orientation === Orientation.Horizontal) {
+                wrapperSlide.style.width = `${this.getSlideWidth()}px`;
+            } else {
+                wrapperSlide.style.height = `${this.getSlideHeight()}px`;
+            }
         }
     }
 
@@ -94,7 +105,11 @@ export default class Slider {
             if (event.touches.length === 1) {
                 event.preventDefault();
                 if (this.state === State.TouchStarted) {
-                    if (this.isHorizontalSwipe(event.changedTouches[0])) {
+                    const touch: Touch = event.changedTouches[0];
+                    const horizontal: boolean = this.settings.orientation === Orientation.Horizontal;
+                    const swipe: boolean = horizontal && this.isHorizontalSwipe(touch) ||
+                        !horizontal && this.isVerticalSwipe(touch);
+                    if (swipe) {
                         this.state = State.Swipe;
                     }
                 } else if (this.state === State.Swipe) {
@@ -119,9 +134,16 @@ export default class Slider {
         });
     }
 
+    // TODO DRY
     private getSlideWidth(): number {
         const { spaceBetween } = this.settings;
         return (this.wrapper.clientWidth - (this.slidesPerView - 1) * spaceBetween) / this.slidesPerView;
+    }
+
+    // TODO DRY
+    private getSlideHeight(): number {
+        const { spaceBetween } = this.settings;
+        return (this.wrapper.clientHeight - (this.slidesPerView - 1) * spaceBetween) / this.slidesPerView;
     }
 
     /**
@@ -130,6 +152,15 @@ export default class Slider {
      */
     private isHorizontalSwipe(touch: Touch): boolean {
         return Math.abs(this.startTouch.pageX - touch.pageX) >
+            Math.abs(this.startTouch.pageY - touch.pageY);
+    }
+
+    /**
+     * If vertical offset greater than horizontal then it is vertical swipe
+     * @param {Touch} touch - touch to check
+     */
+    private isVerticalSwipe(touch: Touch): boolean {
+        return Math.abs(this.startTouch.pageX - touch.pageX) <
             Math.abs(this.startTouch.pageY - touch.pageY);
     }
 
