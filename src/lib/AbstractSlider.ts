@@ -1,6 +1,6 @@
-import { limit } from "./Utils";
 import CLASS_NAMES from "./ClassNames";
 import ISettings from "./ISettings";
+import { limit } from "./Utils";
 
 enum State { Idle, TouchStarted, Swipe, Positioning }
 
@@ -45,13 +45,7 @@ export default abstract class AbstractSlider {
         slide.classList.add(CLASS_NAMES.ELEMENTS.SLIDE);
         this.wrapper.appendChild(slide);
         this.slidesPerView = Math.min(this.settings.slidesPerView, this.wrapper.children.length);
-        for (let i = 0; i < this.wrapper.children.length; i++) {
-            const wrapperSlide = this.wrapper.children.item(i) as HTMLElement;
-            if (i < this.wrapper.children.length - 1) {
-                wrapperSlide.style[this.getMarginProperty() as any] = `${this.settings.spaceBetween}px`;
-            }
-            wrapperSlide.style[this.getSizeProperty() as any] = `${this.getSlideSize()}px`;
-        }
+        this.update();
     }
 
     public previous(): void {
@@ -63,12 +57,9 @@ export default abstract class AbstractSlider {
     }
 
     public slideTo(index: number): void {
-        this.totalOffset = NaN;
         const normalizedIndex = this.getNormalizedIndex(Math.floor(index));
-        if (normalizedIndex !== this.currentIndex) {
-            this.currentSlideOffset = (this.currentIndex - normalizedIndex) * this.getSlideSize();
-            this.moveToNearestSlide();
-        }
+        this.currentSlideOffset = (this.currentIndex - normalizedIndex) * this.getSlideSize();
+        this.moveToNearestSlide();
     }
 
     protected abstract getSizeProperty(): string;
@@ -87,9 +78,19 @@ export default abstract class AbstractSlider {
         return [];
     }
 
-    protected getSlideSize(): number {
+    private getSlideSize(): number {
         const { spaceBetween } = this.settings;
         return (this.getWrapperSize() - (this.slidesPerView - 1) * spaceBetween) / this.slidesPerView;
+    }
+
+    private update(): void {
+        for (let i = 0; i < this.wrapper.children.length; i++) {
+            const slide = this.wrapper.children.item(i) as HTMLElement;
+            if (i < this.wrapper.children.length - 1) {
+                slide.style[this.getMarginProperty() as any] = `${this.settings.spaceBetween}px`;
+            }
+            slide.style[this.getSizeProperty() as any] = `${this.getSlideSize()}px`;
+        }
     }
 
     private getNormalizedIndex(index: number): number {
@@ -101,6 +102,11 @@ export default abstract class AbstractSlider {
     }
 
     private addEventListeners(container: HTMLElement): void {
+        window.addEventListener("resize", () => {
+            this.update();
+            this.slideTo(this.currentIndex);
+        });
+
         container.addEventListener("touchstart", (event) => {
             if (event.touches.length === 1 && this.state === State.Idle) {
                 event.preventDefault();
@@ -181,8 +187,7 @@ export default abstract class AbstractSlider {
             min: this.getOffsetToEnd(),
             value: -integerSlidesOffset * (this.getSlideSize() + spaceBetween),
         });
-        if (this.totalOffset % this.currentSlideOffset !== 0) {
-            this.move();
+        if (this.move()) {
             this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
             this.state = State.Positioning;
         } else {
@@ -204,12 +209,18 @@ export default abstract class AbstractSlider {
         return integerSlidesOffset;
     }
 
-    private move(): void {
+    private move(): boolean {
         const { spaceBetween } = this.settings;
         const { currentIndex, currentSlideOffset } = this;
 
-        this.totalOffset = -currentIndex * (this.getSlideSize() + spaceBetween) + currentSlideOffset;
-        this.wrapper.style.transform = `translate3d(${this.getTranslate3dParameters()})`;
+        const newOffset: number = -currentIndex * (this.getSlideSize() + spaceBetween) + currentSlideOffset;
+        const shouldMove: boolean = this.totalOffset !== newOffset;
+        if (shouldMove) {
+            this.totalOffset = newOffset;
+            this.wrapper.style.transform = `translate3d(${this.getTranslate3dParameters()})`;
+        }
+
+        return shouldMove;
     }
 
 }
