@@ -18,14 +18,15 @@ export default abstract class AbstractSlider {
     protected readonly wrapper: HTMLElement;
     protected readonly settings: ISettings;
 
+    protected totalOffset: number;
+    protected startTouch: Touch;
+
     private state: State = State.Idle;
     private currentIndex: number = 0;
-    protected slidesPerView: number;
+    private slidesPerView: number;
 
     private currentSlideOffset: number;
-    protected totalOffset: number;
     private startTime: number;
-    protected startTouch: Touch;
 
     public constructor(container: HTMLElement, settings?: Partial<ISettings>) {
         this.wrapper = document.createElement("div");
@@ -47,9 +48,9 @@ export default abstract class AbstractSlider {
         for (let i = 0; i < this.wrapper.children.length; i++) {
             const wrapperSlide = this.wrapper.children.item(i) as HTMLElement;
             if (i < this.wrapper.children.length - 1) {
-                this.setSlideMargin(wrapperSlide);
+                wrapperSlide.style[this.getMarginProperty() as any] = `${this.settings.spaceBetween}px`;
             }
-            this.setSlideSize(wrapperSlide);
+            wrapperSlide.style[this.getSizeProperty() as any] = `${this.getSlideSize()}px`;
         }
     }
 
@@ -70,9 +71,9 @@ export default abstract class AbstractSlider {
         }
     }
 
-    protected abstract setSlideSize(slide: HTMLElement): void;
+    protected abstract getSizeProperty(): string;
 
-    protected abstract setSlideMargin(slide: HTMLElement): void;
+    protected abstract getMarginProperty(): string;
 
     protected abstract getWrapperSize(): number;
 

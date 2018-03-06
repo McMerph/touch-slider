@@ -2,12 +2,12 @@ import AbstractSlider from "./AbstractSlider";
 
 export default class HorizontalSlider extends AbstractSlider {
 
-    protected setSlideSize(slide: HTMLElement): void {
-        slide.style.width = `${this.getSlideSize()}px`;
+    protected getSizeProperty(): string {
+        return "width";
     }
 
-    protected setSlideMargin(slide: HTMLElement): void {
-        slide.style.marginRight = `${this.settings.spaceBetween}px`;
+    protected getMarginProperty(): string {
+        return "marginRight";
     }
 
     protected getWrapperSize(): number {

@@ -7,12 +7,12 @@ export default class VerticalSlider extends AbstractSlider {
         return [CLASS_NAMES.ELEMENTS.WRAPPER.MODIFIERS.VERTICAL];
     }
 
-    protected setSlideSize(slide: HTMLElement): void {
-        slide.style.height = `${this.getSlideSize()}px`;
+    protected getSizeProperty(): string {
+        return "height";
     }
 
-    protected setSlideMargin(slide: HTMLElement): void {
-        slide.style.marginBottom = `${this.settings.spaceBetween}px`;
+    protected getMarginProperty(): string {
+        return "marginBottom";
     }
 
     protected getWrapperSize(): number {
