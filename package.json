@@ -21,18 +21,14 @@
     "last 1 ie versions"
   ],
   "keywords": [
+    "Slider",
+    "Touch",
     "Node.js",
     "TypeScript",
-    "WebPack",
-    "Slider",
-    "Touch"
+    "WebPack"
   ],
   "author": "Alexandr Sidorenko",
   "license": "ISC",
-  "dependencies": {
-    "classlist-polyfill": "^1.2.0",
-    "normalize.css": "^8.0.0"
-  },
   "devDependencies": {
     "@types/node": "^9.4.5",
     "@types/webpack": "^3.8.5",
@@ -41,12 +37,14 @@
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-preset-env": "^1.6.1",
+    "classlist-polyfill": "^1.2.0",
     "clean-webpack-plugin": "^0.1.18",
     "copy-webpack-plugin": "^4.5.0",
     "css-loader": "^0.28.9",
     "file-loader": "^1.1.6",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^2.30.1",
+    "normalize.css": "^8.0.0",
     "style-loader": "^0.20.1",
     "stylelint": "^8.4.0",
     "stylelint-config-standard": "^18.0.0",
