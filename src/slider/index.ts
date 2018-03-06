@@ -173,7 +173,7 @@ export default class Slider {
             min: this.getOffsetToRight(),
             value: -integerSlidesOffset * (this.getSlideWidth() + spaceBetween),
         });
-        if (this.totalOffset !== this.currentSlideOffset) {
+        if (this.totalOffset % this.currentSlideOffset !== 0) {
             this.move();
             this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
             this.state = State.Positioning;
