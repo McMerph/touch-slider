@@ -21,17 +21,19 @@ export default class Slider {
 
     private state: State = State.Idle;
     private currentIndex: number = 0;
+    private slidesPerView: number;
+
     private offset: number;
+    private previousMove: number;
     private startTouch: Touch;
     private startTime: number;
-    private slidesPerView: number;
 
     public constructor(container: HTMLElement, settings?: Partial<ISettings>) {
         this.container = container;
+        this.wrapper = document.createElement("div");
         this.settings = { ...Slider.defaultSettings, ...settings };
         this.slidesPerView = this.settings.slidesPerView;
 
-        this.wrapper = document.createElement("div");
         this.wrapper.classList.add(CLASS_NAMES.ELEMENTS.WRAPPER);
         this.container.classList.add(CLASS_NAMES.BLOCK);
         this.container.appendChild(this.wrapper);
@@ -60,6 +62,7 @@ export default class Slider {
     }
 
     public slideTo(index: number): void {
+        this.previousMove = NaN;
         const normalizedIndex = this.getNormalizedIndex(Math.floor(index));
         if (normalizedIndex !== this.currentIndex) {
             this.offset = (this.currentIndex - normalizedIndex) * this.getSlideWidth();
@@ -93,7 +96,7 @@ export default class Slider {
                         this.state = State.Swipe;
                     }
                 } else if (this.state === State.Swipe) {
-                    this.offset = this.generateOffset(event.changedTouches[0]);
+                    this.offset = this.getTouchOffset(event.changedTouches[0]);
                     this.move();
                 }
             }
@@ -108,7 +111,6 @@ export default class Slider {
         this.container.addEventListener("touchend", handleTouchEnd);
         this.container.addEventListener("touchcancel", handleTouchEnd);
 
-        // TODO Sometimes it's not invoked because of accurate swipe
         this.container.addEventListener("transitionend", () => {
             this.wrapper.style.transitionDuration = null;
             this.state = State.Idle;
@@ -129,7 +131,7 @@ export default class Slider {
             Math.abs(this.startTouch.pageY - touch.pageY);
     }
 
-    private generateOffset(touch: Touch): number {
+    private getTouchOffset(touch: Touch): number {
         const { currentIndex, slidesPerView } = this;
 
         const pixelsDelta: number = touch.pageX - this.startTouch.pageX;
@@ -171,10 +173,14 @@ export default class Slider {
             min: this.getOffsetToRight(),
             value: -integerSlidesOffset * (this.getSlideWidth() + spaceBetween),
         });
-        this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
-        this.move();
+        if (this.previousMove !== this.offset) {
+            this.move();
+            this.wrapper.style.transitionDuration = `${this.settings.transitionDurationInMs}ms`;
+            this.state = State.Positioning;
+        } else {
+            this.state = State.Idle;
+        }
         this.currentIndex = this.getNormalizedIndex(this.currentIndex + integerSlidesOffset);
-        this.state = State.Positioning;
     }
 
     private getIntegerSlidesOffset(): number {
@@ -194,6 +200,7 @@ export default class Slider {
         const { spaceBetween } = this.settings;
         const slideWidth: number = this.getSlideWidth();
         const moveX: number = -this.currentIndex * (slideWidth + spaceBetween) + this.offset;
+        this.previousMove = moveX;
         this.wrapper.style.transform = `translate3d(${moveX}px, 0, 0`;
     }
 
