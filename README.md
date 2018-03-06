@@ -2,7 +2,7 @@
 Touch slider - is a touch slider with hardware accelerated transitions. It is intended to be used in websites.
 
 ## Usage
-Add repo of this project to 'dependences' in package.json of your project.
+Add repo of this project to 'dependencies' in package.json of your project.
 
     // package.json
     "dependencies": {
