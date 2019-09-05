@@ -140,7 +140,7 @@ export default abstract class AbstractSlider {
         container.addEventListener("touchcancel", handleTouchEnd);
 
         container.addEventListener("transitionend", () => {
-            this.wrapper.style.transitionDuration = null;
+            this.wrapper.style.transitionDuration = "0";
             this.state = State.Idle;
         });
     }
